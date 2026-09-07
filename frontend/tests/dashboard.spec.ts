@@ -1,7 +1,7 @@
 import { test, expect } from "@playwright/test";
 import { attachFullPage } from "./_helpers";
 
-test.describe("SOC Command Center Dashboard", () => {
+test.describe("Security Overview", () => {
   test.afterEach(async ({ page }, testInfo) => {
     await attachFullPage(page, testInfo);
   });
@@ -10,79 +10,58 @@ test.describe("SOC Command Center Dashboard", () => {
     await page.goto("/");
   });
 
-  test("page title is set", async ({ page }) => {
+  test("page renders the Security Overview heading", async ({ page }) => {
     await expect(page).toHaveTitle(/UniShield AI/i);
+    await expect(
+      page.getByRole("heading", { name: "Security Overview", exact: true })
+    ).toBeVisible();
   });
 
-  test("six stat cards render with live values", async ({ page }) => {
-    const cards = [
-      { label: "Total Users", value: "12,480" },
-      { label: "Devices", value: "9,320" },
-      { label: "Mailboxes", value: "15,240" },
-      { label: "Browsers", value: "12,206" },
-      { label: "Cloud Drives", value: "3,840" },
-      { label: "Internet Assets", value: "518" },
-    ];
+  test("KPI cards appear or a waiting state is shown", async ({ page }) => {
+    const kpi = page.getByText("Ingest rate", { exact: true }).first();
+    const empty = page.getByText(/Collecting trend samples|No detections yet|Waiting for the engine to respond/).first();
+    await kpi.or(empty).waitFor({ state: "visible" });
 
-    for (const c of cards) {
+    if (await kpi.isVisible()) {
+      for (const label of [
+        "Ingest rate",
+        "Flows processed",
+        "Active flows",
+        "Alerts raised",
+        "ML inferences",
+        "Queue / errors",
+      ]) {
+        await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
+      }
+    } else {
+      await expect(empty).toBeVisible();
+    }
+  });
+
+  test("trend, posture and recent detections panels render", async ({ page }) => {
+    await expect(page.getByText("Ingest & detection trend", { exact: true })).toBeVisible();
+    await expect(page.getByText("Threat posture", { exact: true })).toBeVisible();
+    await expect(page.getByText("Recent detections", { exact: true })).toBeVisible();
+  });
+
+  test("live feed navigates to the investigation page", async ({ page }) => {
+    const link = page.locator('a[href^="/investigation/"]').first();
+    const noData = page.getByText("No detections yet", { exact: false });
+    await link.or(noData).first().waitFor({ state: "visible" });
+
+    let clicked = false;
+    if (await link.isVisible().catch(() => false)) {
+      await link.click();
+      clicked = true;
+    } else {
+      // Empty state acceptable while backend has no alerts yet.
+      await expect(noData).toBeVisible();
+    }
+
+    if (clicked) {
       await expect(
-        page.getByText(c.label, { exact: true }).first()
+        page.getByRole("heading", { name: /Threat investigation|Port Scan|Distributed DoS|Suspicious Traffic|Denial of Service/i }).first()
       ).toBeVisible();
-      await expect(page.getByText(c.value, { exact: true })).toBeVisible();
     }
-  });
-
-  test("coverage radar panel shows legend and control axes", async ({ page }) => {
-    await expect(
-      page.getByText("Coverage & Issues by Security Control", { exact: true })
-    ).toBeVisible();
-    for (const label of ["Uncovered", "Covered", "Issues"]) {
-      await expect(page.getByText(label, { exact: true }).first()).toBeVisible();
-    }
-    for (const axis of [
-      "Phishing Simulations",
-      "Cloud Posture",
-      "External Footprint",
-      "Dark Web",
-      "Cloud Data",
-      "Email Protection",
-      "Endpoint Security",
-      "Secure Browsing",
-    ]) {
-      await expect(page.getByText(axis, { exact: true })).toBeVisible();
-    }
-  });
-
-  test("issues by risk panel shows total, meters and customers", async ({ page }) => {
-    await expect(page.getByText("Issues By Risk", { exact: true })).toBeVisible();
-    await expect(page.getByText("1,240", { exact: true })).toBeVisible();
-    for (const level of ["Critical", "High", "Medium", "Low"]) {
-      await expect(page.getByText(level, { exact: true })).toBeVisible();
-    }
-    for (const customer of ["Acme Corp", "Globex", "Initech"]) {
-      await expect(page.getByText(customer, { exact: true })).toBeVisible();
-    }
-  });
-
-  test("insight cards are present", async ({ page }) => {
-    await expect(
-      page.getByText("New Report Ready", { exact: true })
-    ).toBeVisible();
-    await expect(
-      page.getByText("Security Alert", { exact: true })
-    ).toBeVisible();
-    await expect(
-      page.getByText("Setup Required", { exact: true })
-    ).toBeVisible();
-  });
-
-  test("chat widget toggles open and shows messages", async ({ page }) => {
-    await page.getByRole("button", { name: "Open chat" }).click();
-    await expect(
-      page.getByText("UniShield Assistant", { exact: true })
-    ).toBeVisible();
-    await expect(
-      page.getByText(/Acme currently has 42 open issues/)
-    ).toBeVisible();
   });
 });

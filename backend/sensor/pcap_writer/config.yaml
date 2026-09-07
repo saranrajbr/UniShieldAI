@@ -1,0 +1,21 @@
+# UniShield PCAP writer configuration
+writer:
+  active_dir: "captures/active"
+  active_file: "current.pcap"
+  incidents_dir: "captures/incidents"
+  archive_dir: "captures/archive"
+
+rotation:
+  max_bytes: 104857600      # 100 MB rolling buffer
+  rotate_interval_sec: 300  # rotate every 5 minutes
+  check_interval_sec: 5
+
+capture:
+  interface: null           # null = auto/record via pcap file
+  pcap_source_file: null
+  snaplen: 65535
+  promiscuous: false
+
+preservation:
+  enabled: true             # preserve relevant traffic on threat detection
+  copy_to_incidents: true

@@ -1,29 +1,23 @@
 import { createBrowserRouter } from "react-router-dom";
 import { AppFrame } from "../components/layout/AppFrame";
-import Dashboard from "../pages/Dashboard";
-import ThreatDetection from "../pages/ThreatDetection";
-import TrafficAnalysis from "../pages/TrafficAnalysis";
+import Overview from "../pages/Overview";
 import Alerts from "../pages/Alerts";
-import NetworkFlows from "../pages/NetworkFlows";
-import AIIntelligence from "../pages/AIIntelligence";
-import Reports from "../pages/Reports";
-import Settings from "../pages/Settings";
-import ThreatInvestigation from "../pages/ThreatInvestigation";
+import Traffic from "../pages/Traffic";
+import Investigation from "../pages/Investigation";
+import Engine from "../pages/Engine";
+import About from "../pages/About";
 
 export const router = createBrowserRouter([
   {
     path: "/",
     element: <AppFrame />,
     children: [
-      { index: true, element: <Dashboard /> },
-      { path: "detection", element: <ThreatDetection /> },
-      { path: "traffic", element: <TrafficAnalysis /> },
+      { index: true, element: <Overview /> },
       { path: "alerts", element: <Alerts /> },
-      { path: "network", element: <NetworkFlows /> },
-      { path: "ai", element: <AIIntelligence /> },
-      { path: "reports", element: <Reports /> },
-      { path: "settings", element: <Settings /> },
-      { path: "investigation/:id", element: <ThreatInvestigation /> },
+      { path: "traffic", element: <Traffic /> },
+      { path: "engine", element: <Engine /> },
+      { path: "about", element: <About /> },
+      { path: "investigation/:id", element: <Investigation /> },
     ],
   },
 ]);

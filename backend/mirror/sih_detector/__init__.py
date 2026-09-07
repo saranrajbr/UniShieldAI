@@ -1,1 +1,0 @@
-# Sih detector module

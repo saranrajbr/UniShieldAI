@@ -1,0 +1,23 @@
+fastapi>=0.115
+uvicorn[standard]>=0.30
+pydantic>=2.7
+pydantic-settings>=2.3
+sqlalchemy[asyncio]>=2.0
+structlog>=24.1
+httpx>=0.27
+PyYAML>=6.0
+numpy>=1.26
+pandas>=2.2
+aiofiles>=24.1
+psutil>=5.9
+
+# Optional ML
+scikit-learn>=1.4
+xgboost>=2.0
+
+# Optional capture (Scapy)
+scapy>=2.5
+
+# Testing
+pytest>=8.0
+pytest-asyncio>=0.23

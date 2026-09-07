@@ -1,135 +1,232 @@
-import { useState } from "react";
-import { Search, ChevronDown, Filter } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Search, Inbox } from "lucide-react";
+import { Link } from "react-router-dom";
+import { useEngine } from "../store/engine";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card } from "../components/ui/Card";
+import { SeverityBadge } from "../components/alerts/SeverityBadge";
+import { ThreatBadge } from "../components/alerts/ThreatBadge";
+import { FlowPair } from "../components/alerts/AlertRow";
+import { EmptyState, SearchEmptyState } from "../components/alerts/EmptyState";
+import { severityMeta } from "../lib/threats";
+import { humanThreatType, timeAgo, type Alert } from "../lib/api";
 import { cn } from "../lib/cn";
-import { colors, type SeverityKey } from "../theme";
 
-interface AlertRow {
-  severity: SeverityKey;
-  name: string;
-  src: string;
-  dst: string;
-  confidence: string;
-  time: string;
-  status: "New" | "Investigating" | "Resolved" | "Ignored";
+type StatusTab = "all" | "new" | "investigating" | "resolved" | "ignored";
+
+function statusOf(a: Alert): Exclude<StatusTab, "all"> {
+  if (a.status === "resolved") return "resolved";
+  if (a.status === "ignored") return "ignored";
+  if (a.detection_sources && a.detection_sources.length >= 2) return "investigating";
+  return "new";
 }
 
-const rows: AlertRow[] = [
-  { severity: "critical", name: "C2 Beaconing", src: "10.24.18.42", dst: "185.x.x.xxx", confidence: "98.7%", time: "12 sec ago", status: "New" },
-  { severity: "high", name: "Port Scan Anomaly", src: "10.24.22.17", dst: "91.x.x.xxx", confidence: "94.2%", time: "34 sec ago", status: "Investigating" },
-  { severity: "medium", name: "DNS Tunneling", src: "10.24.9.21", dst: "8.8.8.8", confidence: "87.4%", time: "1 min ago", status: "New" },
-  { severity: "high", name: "Data Exfiltration", src: "10.24.30.5", dst: "45.x.xxx.xx", confidence: "91.8%", time: "4 min ago", status: "Investigating" },
-  { severity: "low", name: "Reconnaissance", src: "203.0.113.5", dst: "10.24.0.12", confidence: "72.1%", time: "9 min ago", status: "Resolved" },
-  { severity: "critical", name: "Malicious Destination", src: "10.24.18.42", dst: "198.51.100.7", confidence: "96.3%", time: "13 min ago", status: "New" },
-  { severity: "medium", name: "Traffic Burst", src: "10.24.5.88", dst: "192.0.2.44", confidence: "84.9%", time: "21 min ago", status: "Ignored" },
+const TABS: { id: StatusTab; label: string }[] = [
+  { id: "all", label: "All" },
+  { id: "new", label: "New" },
+  { id: "investigating", label: "Investigating" },
+  { id: "resolved", label: "Resolved" },
+  { id: "ignored", label: "Ignored" },
 ];
 
-const sevStyle: Record<SeverityKey, { color: string; bg: string }> = {
-  critical: { color: "#FF4757", bg: "rgba(255,71,87,0.10)" },
-  high: { color: "#FF9F43", bg: "rgba(255,159,67,0.10)" },
-  medium: { color: "#FFD93D", bg: "rgba(255,217,61,0.10)" },
-  low: { color: "#6BCB77", bg: "rgba(107,203,119,0.10)" },
-};
-
-const statusStyle: Record<AlertRow["status"], string> = {
-  New: "#A78BFA",
-  Investigating: "#FF9F43",
-  Resolved: "#6BCB77",
-  Ignored: colors.text4,
-};
-
-const filters = ["Severity", "Threat Type", "Protocol", "Source", "Destination", "Time Range", "Status"];
-
 export default function Alerts() {
-  const [activeStatus, setActiveStatus] = useState<AlertRow["status"]>("New");
+  const alerts = useEngine((s) => s.alerts);
+  const gotData = useEngine((s) => s.gotData);
+  const [query, setQuery] = useState("");
+  const [severity, setSeverity] = useState("all");
+  const [threat, setThreat] = useState("all");
+  const [tab, setTab] = useState<StatusTab>("all");
 
-  const filtered = rows.filter((r) =>
-    activeStatus === "New" ? r.status === "New" || r.status === "Investigating" : r.status === activeStatus
+  const threatTypes = useMemo(
+    () => [...new Set(alerts.map((a) => a.threat_type))].sort(),
+    [alerts]
   );
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    return alerts.filter((a) => {
+      if (severity !== "all" && a.severity !== severity) return false;
+      if (threat !== "all" && a.threat_type !== threat) return false;
+      if (tab !== "all" && statusOf(a) !== tab) return false;
+      if (!q) return true;
+      return (
+        a.src_ip.toLowerCase().includes(q) ||
+        a.dst_ip.toLowerCase().includes(q) ||
+        (a.protocol ?? "").toLowerCase().includes(q) ||
+        humanThreatType(a.threat_type).toLowerCase().includes(q) ||
+        a.alert_id.toLowerCase().includes(q)
+      );
+    });
+  }, [alerts, severity, threat, tab, query]);
+
+  const counts = useMemo(() => {
+    const c: Record<StatusTab, number> = { all: alerts.length, new: 0, investigating: 0, resolved: 0, ignored: 0 };
+    alerts.forEach((a) => (c[statusOf(a)] += 1));
+    return c;
+  }, [alerts]);
+
   return (
-    <div className="p-6 space-y-6">
-      <PageHeader title="Security Alerts" subtitle="Investigable, explainable detection events from the UniShield AI engine." />
+    <div className="p-5 md:p-6 max-w-[1400px] mx-auto">
+      <PageHeader
+        title="Security Alerts"
+        subtitle="Every detection the engine raised, ranked by severity — click a row to investigate the evidence."
+      />
 
       {/* Filter bar */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex items-center gap-2 flex-1 min-w-[240px] bg-white/[0.03] border border-white/[0.06] rounded-lg px-3 h-10 max-w-md">
-          <Search size={15} className="text-[#64748B]" />
+      <div className="flex flex-wrap items-center gap-2.5 mb-4">
+        <div className="flex items-center gap-2 flex-1 min-w-[240px] max-w-md h-10 px-3 rounded-lg bg-white/[0.03] border border-white/[0.08] focus-within:border-[#7C5CFC]/50 transition-colors">
+          <Search size={14} className="text-[#64748B] shrink-0" strokeWidth={2} />
           <input
-            placeholder="Search alerts"
-            className="flex-1 bg-transparent text-[13px] text-[#CBD5E1] placeholder-[#64748B] focus:outline-none"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search by IP, protocol, threat…"
+            className="bg-transparent border-none outline-none text-[13px] text-white placeholder:text-[#475569] flex-1"
+            aria-label="Search alerts"
           />
         </div>
-        <div className="flex items-center gap-1.5">
-          {filters.map((f) => (
+        <Select
+          value={severity}
+          onChange={setSeverity}
+          label="Severity"
+          options={[
+            { value: "all", label: "All severities" },
+            { value: "critical", label: "Critical" },
+            { value: "high", label: "High" },
+            { value: "medium", label: "Medium" },
+            { value: "low", label: "Low" },
+          ]}
+        />
+        <Select
+          value={threat}
+          onChange={setThreat}
+          label="Threat"
+          options={[
+            { value: "all", label: "All threats" },
+            ...threatTypes.map((t) => ({ value: t, label: humanThreatType(t) })),
+          ]}
+        />
+        {/* Status tabs */}
+        <div className="flex items-center p-1 rounded-lg bg-white/[0.03] border border-white/[0.06] overflow-x-auto thin-scroll">
+          {TABS.map((t) => (
             <button
-              key={f}
-              className="flex items-center gap-1.5 h-9 px-3 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[12px] text-[#94A3B8] hover:border-white/[0.12] hover:text-[#CBD5E1] transition-colors"
+              key={t.id}
+              onClick={() => setTab(t.id)}
+              className={cn(
+                "px-3 h-8 rounded-md text-[12px] font-medium whitespace-nowrap transition-all",
+                tab === t.id ? "bg-white/[0.09] text-white" : "text-[#94A3B8] hover:text-[#CBD5E1]"
+              )}
             >
-              {f}
-              <ChevronDown size={13} className="text-[#64748B]" />
+              {t.label}
+              <span className="ml-1.5 text-[10px] tabular-nums opacity-70">{counts[t.id]}</span>
             </button>
           ))}
-          <button className="flex items-center gap-1.5 h-9 px-3 rounded-lg bg-white/[0.03] border border-white/[0.06] text-[12px] text-[#A78BFA] hover:border-white/[0.12] transition-colors">
-            <Filter size={14} />
-            Filters
-          </button>
         </div>
       </div>
 
-      {/* Status tabs */}
-      <div className="flex items-center gap-2">
-        {(["New", "Investigating", "Resolved", "Ignored"] as AlertRow["status"][]).map((s) => (
-          <button
-            key={s}
-            onClick={() => setActiveStatus(s)}
-            className={cn(
-              "px-4 h-9 rounded-lg text-[13px] font-medium transition-all duration-150",
-              activeStatus === s
-                ? "accent-gradient text-white shadow-[0_2px_12px_rgba(124,92,252,0.3)]"
-                : "text-[#94A3B8] hover:text-[#CBD5E1] bg-white/[0.03] border border-white/[0.06]"
-            )}
-          >
-            {s}
-          </button>
-        ))}
-      </div>
-
-      {/* Alert list */}
       <Card>
-        <div className="-m-5">
-          {filtered.map((row, i) => (
-            <div
-              key={i}
-              className="flex items-center gap-4 px-5 py-4 border-b border-white/[0.04] last:border-0 hover:bg-white/[0.03] transition-colors"
-            >
-              <div
-                className="w-[3px] self-stretch rounded-full"
-                style={{ backgroundColor: sevStyle[row.severity].color, boxShadow: `0 0 8px ${sevStyle[row.severity].color}` }}
-              />
-              <div className="w-28">
-                <span className="text-[11px] font-bold uppercase tracking-wide px-2 py-0.5 rounded" style={{ color: sevStyle[row.severity].color, backgroundColor: sevStyle[row.severity].bg }}>
-                  {row.severity}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-[13.5px] font-semibold text-[#CBD5E1] truncate">{row.name}</p>
-                <p className="text-[12px] font-mono text-[#94A3B8] mt-0.5">
-                  {row.src} <span className="text-[#64748B]">→</span> {row.dst}
-                </p>
-              </div>
-              <div className="text-[12px] text-[#A78BFA] tabular w-20 text-right">{row.confidence}</div>
-              <div className="text-[12px] text-[#64748B] w-24 text-right">{row.time}</div>
-              <div className="w-28 text-right">
-                <span className="text-[11px] font-medium" style={{ color: statusStyle[row.status] }}>
-                  {row.status}
-                </span>
-              </div>
+        {!gotData ? (
+          <EmptyState mode="offline" />
+        ) : filtered.length === 0 ? (
+          query.trim() || severity !== "all" || threat !== "all" || tab !== "all" ? (
+            <SearchEmptyState query={query.trim() || "current filters"} />
+          ) : (
+            <EmptyState
+              mode="empty"
+              icon={Inbox}
+              title="No alerts yet"
+              hint="The engine has not raised any alerts in the current window."
+            />
+          )
+        ) : (
+          <div className="flex flex-col">
+            {/* Column headers */}
+            <div className="flex items-center gap-3 px-4 py-2.5 border-b border-white/[0.06] text-[10px] uppercase tracking-[0.12em] text-[#475569]">
+              <span className="w-[84px] shrink-0">Severity</span>
+              <span className="flex-1">Threat</span>
+              <span className="hidden xl:inline-flex flex-1">Source → Destination</span>
+              <span className="hidden sm:inline w-[110px]">Evidence</span>
+              <span className="w-[92px] text-right">Detected</span>
             </div>
-          ))}
-        </div>
+            {filtered.slice(0, 120).map((a) => (
+              <Link
+                key={a.alert_id}
+                to={`/investigation/${a.alert_id}`}
+                className="flex items-center gap-3 px-4 min-h-[48px] hover:bg-white/[0.03] transition-colors border-b border-white/[0.04] group"
+              >
+                <SeverityBadge severity={a.severity} className="w-[84px] justify-center shrink-0" />
+                <span className="flex-1 min-w-0">
+                  <span className="flex items-center gap-2">
+                    <ThreatBadge type={a.threat_type} />
+                    <span
+                      className="text-[10px] font-semibold uppercase tracking-wider hidden md:inline"
+                      style={{ color: severityMeta(a.severity).color }}
+                    >
+                      risk {Math.round(a.risk_score * 100)}%
+                    </span>
+                  </span>
+                </span>
+                <FlowPair
+                  src={a.src_ip}
+                  dst={a.dst_ip}
+                  srcPort={a.src_port}
+                  dstPort={a.dst_port}
+                  protocol={a.protocol}
+                  className="hidden xl:inline-flex flex-1 min-w-0"
+                />
+                <span className="hidden sm:flex w-[110px] gap-1 flex-wrap">
+                  {(a.detection_sources ?? []).slice(0, 2).map((s) => (
+                    <span
+                      key={s}
+                      className="px-1.5 h-[18px] rounded text-[9.5px] font-medium bg-white/[0.05] text-[#94A3B8] border border-white/[0.06] flex items-center"
+                    >
+                      {s.replace(/_/g, " ")}
+                    </span>
+                  ))}
+                </span>
+                <span className="w-[92px] text-right text-[11px] text-[#64748B] tabular-nums whitespace-nowrap shrink-0">
+                  {timeAgo(a.timestamp)}
+                </span>
+              </Link>
+            ))}
+            {filtered.length > 120 && (
+              <p className="px-4 py-3 text-[11px] text-[#475569]">
+                Showing first 120 of {filtered.length} matching alerts — the engine keeps the most recent 200.
+              </p>
+            )}
+          </div>
+        )}
       </Card>
+    </div>
+  );
+}
+
+function Select({
+  value,
+  onChange,
+  label,
+  options,
+}: {
+  value: string;
+  onChange: (v: string) => void;
+  label: string;
+  options: { value: string; label: string }[];
+}) {
+  return (
+    <div className="relative">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-[10px] uppercase tracking-wider text-[#475569] pointer-events-none">
+        {label}
+      </span>
+      <select
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        className="h-10 pl-14 pr-3 rounded-lg bg-white/[0.03] border border-white/[0.08] text-[13px] text-[#CBD5E1] outline-none appearance-none cursor-pointer hover:border-white/[0.16] transition-colors focus:border-[#7C5CFC]/50"
+      >
+        {options.map((o) => (
+          <option key={o.value} value={o.value} className="bg-[#12141F]">
+            {o.label}
+          </option>
+        ))}
+      </select>
     </div>
   );
 }

@@ -1,33 +1,45 @@
 import { NavLink } from "react-router-dom";
 import {
   LayoutGrid,
-  Radar,
+  ShieldAlert,
   Activity,
-  Bell,
-  Network,
-  Brain,
-  FileText,
-  Settings,
-  HelpCircle,
+  Cpu,
+  Info,
   ChevronsLeft,
 } from "lucide-react";
 import { cn } from "../../lib/cn";
 import { Logo } from "../brand/Logo";
+import { useEngine } from "../../store/engine";
 
 const navItems = [
-  { label: "Dashboard", path: "/", icon: LayoutGrid },
-  { label: "Threat Detection", path: "/detection", icon: Radar },
-  { label: "Traffic Analysis", path: "/traffic", icon: Activity },
-  { label: "Alerts", path: "/alerts", icon: Bell },
-  { label: "Network Flows", path: "/network", icon: Network },
-  { label: "AI Intelligence", path: "/ai", icon: Brain },
-  { label: "Reports", path: "/reports", icon: FileText },
+  { label: "Security Overview", path: "/", icon: LayoutGrid },
+  { label: "Alerts", path: "/alerts", icon: ShieldAlert, badge: true },
+  { label: "Live Traffic", path: "/traffic", icon: Activity },
+  { label: "Detection Engine", path: "/engine", icon: Cpu },
+  { label: "About · PS", path: "/about", icon: Info },
 ];
 
-const footerItems = [
-  { label: "Help", icon: HelpCircle },
-  { label: "Settings", path: "/settings", icon: Settings },
-];
+function AlertBadge() {
+  const alerts = useEngine((s) => s.alerts);
+  const open = alerts.filter(
+    (a) => a.status !== "resolved" && a.status !== "ignored"
+  ).length;
+  if (open === 0) return null;
+  const critical = alerts.some((a) => a.severity === "critical");
+  return (
+    <span
+      className={cn(
+        "hidden md:inline-flex items-center h-5 min-w-5 px-1.5 rounded-full text-[10px] font-bold ml-auto",
+        critical
+          ? "bg-[#FF4D6A]/20 text-[#FF8CA0] border border-[#FF4D6A]/40"
+          : "bg-white/[0.08] text-[#94A3B8] border border-white/[0.1]"
+      )}
+      title={`${open} open alerts`}
+    >
+      {open}
+    </span>
+  );
+}
 
 function Tooltip({ label }: { label: string }) {
   return (
@@ -44,13 +56,15 @@ function NavLinkButton({
   end,
   expanded,
   index,
+  badge,
 }: {
   label: string;
   path: string;
-  icon: typeof Radar;
+  icon: typeof LayoutGrid;
   end?: boolean;
   expanded: boolean;
   index?: number;
+  badge?: boolean;
 }) {
   return (
     <div className="relative group flex justify-center md:justify-start md:w-full">
@@ -86,53 +100,10 @@ function NavLinkButton({
             >
               {label}
             </span>
+            {badge && <AlertBadge />}
           </>
         )}
       </NavLink>
-      {!expanded && <Tooltip label={label} />}
-    </div>
-  );
-}
-
-function FooterItemButton({
-  label,
-  path,
-  icon: Icon,
-  expanded,
-  index,
-}: {
-  label: string;
-  icon: typeof Radar;
-  path?: string;
-  expanded: boolean;
-  index?: number;
-}) {
-  if (path) {
-    return <NavLinkButton label={label} path={path} icon={Icon} expanded={expanded} index={index} />;
-  }
-  return (
-    <div className="relative group flex justify-center md:justify-start md:w-full">
-      <button
-        type="button"
-        aria-label={label}
-        className={cn(
-          "relative flex items-center h-11 rounded-xl justify-center transition-all duration-300 ease-in-out text-[#64748B] hover:text-[#CBD5E1] hover:bg-white/[0.05]",
-          expanded ? "md:w-full md:justify-start md:px-3" : "md:w-16 md:px-0"
-        )}
-      >
-        <Icon size={20} strokeWidth={1.75} className="shrink-0" />
-        <span
-          style={{ transitionDelay: expanded ? `${(index ?? 0) * 45}ms` : "0ms" }}
-          className={cn(
-            "hidden md:inline-block overflow-hidden whitespace-nowrap text-[12.5px] font-medium transition-all duration-300 ease-[cubic-bezier(0.16,1,0.3,1)]",
-            expanded
-              ? "opacity-100 translate-x-0 max-w-[200px] ml-3"
-              : "opacity-0 -translate-x-2 max-w-0 ml-0"
-          )}
-        >
-          {label}
-        </span>
-      </button>
       {!expanded && <Tooltip label={label} />}
     </div>
   );
@@ -155,12 +126,20 @@ export function Sidebar({
       {/* Logo (desktop only) */}
       <div
         className={cn(
-          "hidden md:flex items-center mb-6 shrink-0 transition-all duration-300 ease-in-out",
+          "hidden md:flex items-center mb-2 shrink-0 transition-all duration-300 ease-in-out",
           expanded ? "justify-start px-1" : "justify-center"
         )}
       >
         <Logo withWordmark={expanded} />
       </div>
+      <p
+        className={cn(
+          "hidden md:flex items-center gap-1.5 px-2 pb-4 text-[10px] uppercase tracking-[0.14em] text-[#475569] transition-opacity",
+          !expanded && "opacity-0"
+        )}
+      >
+        Network SOC <span>·</span> Read-only
+      </p>
 
       {/* Primary nav — row on mobile, column on desktop */}
       <nav className="flex md:flex-col md:flex-1 gap-1.5 w-full items-center justify-around md:justify-start">
@@ -169,13 +148,8 @@ export function Sidebar({
         ))}
       </nav>
 
-      {/* Footer: Help + Settings + toggle (desktop only) */}
+      {/* Folders footer: collapse toggle (desktop only) */}
       <div className="hidden md:flex flex-col gap-1.5 border-t border-white/[0.06] pt-3 shrink-0">
-        {footerItems.map((item, i) => (
-          <FooterItemButton key={item.label} label={item.label} icon={item.icon} path={item.path} expanded={expanded} index={navItems.length + i} />
-        ))}
-
-        {/* Sidebar toggle */}
         <button
           type="button"
           aria-label={expanded ? "Collapse sidebar" : "Expand sidebar"}

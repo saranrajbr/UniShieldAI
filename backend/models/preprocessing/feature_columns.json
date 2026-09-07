@@ -1,0 +1,24 @@
+{
+  "columns": [
+    "packet_count",
+    "byte_count",
+    "packets_per_sec",
+    "bytes_per_sec",
+    "syn_ratio",
+    "ack_ratio",
+    "rst_ratio",
+    "fin_ratio",
+    "unique_dst_ports",
+    "unique_dst_ips",
+    "connection_frequency",
+    "inter_arrival_time_mean",
+    "inter_arrival_time_std",
+    "periodicity",
+    "dns_entropy",
+    "outbound_inbound_ratio",
+    "avg_packet_size",
+    "flow_duration",
+    "payload_bytes_ratio",
+    "small_packet_ratio"
+  ]
+}
