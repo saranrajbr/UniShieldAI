@@ -1,0 +1,783 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1920 4600" font-family="'Segoe UI', system-ui, -apple-system, sans-serif">
+  <defs>
+    <marker id="arrow-cyan" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#00d4ff"/>
+    </marker>
+    <marker id="arrow-gray" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#64748b"/>
+    </marker>
+    <marker id="arrow-amber" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#f59e0b"/>
+    </marker>
+    <marker id="arrow-green" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#22c55e"/>
+    </marker>
+    <marker id="arrow-red" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#ef4444"/>
+    </marker>
+    <marker id="arrow-blue" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#3b82f6"/>
+    </marker>
+    <marker id="arrow-purple" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M 0 1 L 10 5 L 0 9 z" fill="#a855f7"/>
+    </marker>
+    <filter id="glow-cyan">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="glow-amber">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <linearGradient id="header-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.15"/>
+      <stop offset="50%" stop-color="#06b6d4" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.15"/>
+    </linearGradient>
+    <linearGradient id="section-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#0ea5e9" stop-opacity="0.06"/>
+      <stop offset="100%" stop-color="#0ea5e9" stop-opacity="0.02"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ========== BACKGROUND ========== -->
+  <rect width="1920" height="4600" fill="#080c14"/>
+  <rect width="1920" height="4600" fill="url(#section-grad)" opacity="0.3"/>
+
+  <!-- Subtle grid pattern -->
+  <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+    <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#0f1a2e" stroke-width="0.5"/>
+  </pattern>
+  <rect width="1920" height="4600" fill="url(#grid)" opacity="0.4"/>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 1: HEADER                                                -->
+  <!-- ================================================================ -->
+  <rect x="0" y="0" width="1920" height="130" fill="#0a0f1a" stroke="#0ea5e9" stroke-width="0" opacity="0.95"/>
+  <line x1="0" y1="130" x2="1920" y2="130" stroke="#0ea5e9" stroke-width="1" opacity="0.3"/>
+
+  <!-- Shield icon placeholder -->
+  <polygon points="960,18 988,32 988,58 960,70 932,58 932,32" fill="none" stroke="#00d4ff" stroke-width="2" opacity="0.8"/>
+  <text x="960" y="56" text-anchor="middle" fill="#00d4ff" font-size="22" font-weight="bold">AI</text>
+
+  <text x="960" y="100" text-anchor="middle" fill="#e2e8f0" font-size="38" font-weight="700" letter-spacing="3">UNISHIELD AI</text>
+  <text x="960" y="122" text-anchor="middle" fill="#64748b" font-size="15" letter-spacing="1.5">AI-BASED DETECTION OF CYBER THREATS IN UNIDIRECTIONAL IP TRAFFIC</text>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 2: MAIN ARCHITECTURE - DUAL PATH DATA FLOW               -->
+  <!-- ================================================================ -->
+  <g id="architecture">
+    <text x="960" y="178" text-anchor="middle" fill="#0ea5e9" font-size="24" font-weight="700" letter-spacing="2">ARCHITECTURE &amp; DATA FLOW</text>
+    <line x1="760" y1="190" x2="1160" y2="190" stroke="#0ea5e9" stroke-width="1" opacity="0.3"/>
+
+    <!-- ===== MIRRORED TRAFFIC BOX ===== -->
+    <rect x="810" y="215" width="300" height="55" rx="6" fill="#0f1729" stroke="#0ea5e9" stroke-width="2" filter="url(#glow-cyan)"/>
+    <text x="960" y="240" text-anchor="middle" fill="#00d4ff" font-size="12" font-weight="600" letter-spacing="1">INPUT</text>
+    <text x="960" y="258" text-anchor="middle" fill="#e2e8f0" font-size="17" font-weight="700">MIRRORED TRAFFIC</text>
+
+    <!-- Down arrow from MIRRORED TRAFFIC -->
+    <line x1="960" y1="270" x2="960" y2="298" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- Branch point circle -->
+    <circle cx="960" cy="308" r="5" fill="#0ea5e9" opacity="0.9"/>
+
+    <!-- LEFT BRANCH LINE: to LIVE ANALYSIS -->
+    <line x1="960" y1="308" x2="420" y2="308" stroke="#00d4ff" stroke-width="2" opacity="0.7"/>
+    <line x1="420" y1="308" x2="420" y2="330" stroke="#00d4ff" stroke-width="2" opacity="0.7" marker-end="url(#arrow-cyan)"/>
+
+    <!-- RIGHT BRANCH LINE: to PCAP WRITER -->
+    <line x1="960" y1="308" x2="1500" y2="308" stroke="#f59e0b" stroke-width="2" opacity="0.7"/>
+    <line x1="1500" y1="308" x2="1500" y2="330" stroke="#f59e0b" stroke-width="2" opacity="0.7" marker-end="url(#arrow-amber)"/>
+
+    <!-- Branch labels -->
+    <rect x="570" y="290" width="180" height="22" rx="4" fill="#0ea5e9" fill-opacity="0.12" stroke="#0ea5e9" stroke-width="0.5" opacity="0.8"/>
+    <text x="660" y="305" text-anchor="middle" fill="#00d4ff" font-size="11" font-weight="600" letter-spacing="0.5">PATH 1: LIVE ANALYSIS</text>
+
+    <rect x="1170" y="290" width="200" height="22" rx="4" fill="#f59e0b" fill-opacity="0.12" stroke="#f59e0b" stroke-width="0.5" opacity="0.8"/>
+    <text x="1270" y="305" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600" letter-spacing="0.5">PATH 2: PCAP RECORDING</text>
+
+    <!-- ==================== LEFT PATH: LIVE ANALYSIS ==================== -->
+
+    <!-- LIVE ANALYSIS -->
+    <rect x="280" y="335" width="280" height="50" rx="6" fill="#0f1729" stroke="#0ea5e9" stroke-width="1.5"/>
+    <text x="420" y="365" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="700">LIVE ANALYSIS</text>
+
+    <line x1="420" y1="385" x2="420" y2="410" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- UniShield Engine -->
+    <rect x="270" y="415" width="300" height="55" rx="6" fill="#0f1729" stroke="#00d4ff" stroke-width="2" filter="url(#glow-cyan)"/>
+    <text x="420" y="438" text-anchor="middle" fill="#00d4ff" font-size="11" font-weight="600" letter-spacing="1">CORE</text>
+    <text x="420" y="457" text-anchor="middle" fill="#e2e8f0" font-size="17" font-weight="700">UNISHIELD ENGINE</text>
+
+    <!-- Split arrows to RULES and AI/ML -->
+    <line x1="420" y1="470" x2="420" y2="490" stroke="#475569" stroke-width="1.5"/>
+    <line x1="420" y1="490" x2="290" y2="490" stroke="#475569" stroke-width="1.5"/>
+    <line x1="290" y1="490" x2="290" y2="510" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+    <line x1="420" y1="490" x2="560" y2="490" stroke="#475569" stroke-width="1.5"/>
+    <line x1="560" y1="490" x2="560" y2="510" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+    <!-- Parallel label -->
+    <rect x="375" y="482" width="90" height="18" rx="3" fill="#1e293b" stroke="#475569" stroke-width="0.5"/>
+    <text x="420" y="495" text-anchor="middle" fill="#94a3b8" font-size="9" font-weight="600">PARALLEL</text>
+
+    <!-- ===== RULE ENGINE BOX ===== -->
+    <rect x="160" y="515" width="260" height="175" rx="6" fill="#0c1524" stroke="#22c55e" stroke-width="1.5"/>
+    <rect x="160" y="515" width="260" height="32" rx="6" fill="#22c55e" fill-opacity="0.12"/>
+    <text x="290" y="536" text-anchor="middle" fill="#22c55e" font-size="15" font-weight="700">RULE ENGINE</text>
+
+    <circle cx="185" cy="565" r="3" fill="#22c55e" opacity="0.7"/>
+    <text x="196" y="569" fill="#c8d6e0" font-size="13">Signature Rules</text>
+
+    <circle cx="185" cy="593" r="3" fill="#22c55e" opacity="0.7"/>
+    <text x="196" y="597" fill="#c8d6e0" font-size="13">Statistical Rules</text>
+
+    <circle cx="185" cy="621" r="3" fill="#22c55e" opacity="0.7"/>
+    <text x="196" y="625" fill="#c8d6e0" font-size="13">Behavioral Rules</text>
+
+    <line x1="175" y1="645" x2="405" y2="645" stroke="#22c55e" stroke-width="0.5" opacity="0.3"/>
+    <text x="290" y="668" text-anchor="middle" fill="#64748b" font-size="11">Output: Rule Score [0-1]</text>
+
+    <!-- ===== AI/ML ENGINE BOX ===== -->
+    <rect x="440" y="515" width="260" height="175" rx="6" fill="#0c1524" stroke="#a855f7" stroke-width="1.5"/>
+    <rect x="440" y="515" width="260" height="32" rx="6" fill="#a855f7" fill-opacity="0.12"/>
+    <text x="570" y="536" text-anchor="middle" fill="#a855f7" font-size="15" font-weight="700">AI/ML ENGINE</text>
+
+    <circle cx="465" cy="565" r="3" fill="#a855f7" opacity="0.7"/>
+    <text x="476" y="569" fill="#c8d6e0" font-size="13">Feature Extraction</text>
+
+    <circle cx="465" cy="593" r="3" fill="#a855f7" opacity="0.7"/>
+    <text x="476" y="597" fill="#c8d6e0" font-size="13">Supervised ML (XGBoost)</text>
+
+    <circle cx="465" cy="621" r="3" fill="#a855f7" opacity="0.7"/>
+    <text x="476" y="625" fill="#c8d6e0" font-size="13">Anomaly Detection (IF)</text>
+
+    <line x1="455" y1="645" x2="685" y2="645" stroke="#a855f7" stroke-width="0.5" opacity="0.3"/>
+    <text x="570" y="668" text-anchor="middle" fill="#64748b" font-size="11">Output: ML Probability [0-1]</text>
+
+    <!-- Merge arrows from RULES and AI/ML to DECISION -->
+    <line x1="290" y1="690" x2="290" y2="718" stroke="#22c55e" stroke-width="1.5"/>
+    <line x1="290" y1="718" x2="420" y2="718" stroke="#475569" stroke-width="1.5"/>
+    <line x1="570" y1="690" x2="570" y2="718" stroke="#a855f7" stroke-width="1.5"/>
+    <line x1="570" y1="718" x2="420" y2="718" stroke="#475569" stroke-width="1.5"/>
+    <line x1="420" y1="718" x2="420" y2="730" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- ===== DECISION ENGINE ===== -->
+    <rect x="270" y="735" width="300" height="55" rx="6" fill="#0f1729" stroke="#f59e0b" stroke-width="2"/>
+    <text x="420" y="757" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600" letter-spacing="1">FUSION</text>
+    <text x="420" y="777" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="700">DECISION ENGINE</text>
+
+    <line x1="420" y1="790" x2="420" y2="810" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- Risk Fusion / Scoring -->
+    <rect x="290" y="815" width="260" height="45" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="420" y="843" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Risk Fusion / Scoring</text>
+
+    <line x1="420" y1="860" x2="420" y2="878" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- Threat Classification -->
+    <rect x="290" y="883" width="260" height="45" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="420" y="911" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Threat Classification</text>
+
+    <line x1="420" y1="928" x2="420" y2="948" stroke="#ef4444" stroke-width="2" marker-end="url(#arrow-red)"/>
+
+    <!-- ===== ALERT BOX ===== -->
+    <rect x="290" y="953" width="260" height="55" rx="6" fill="#1c1917" stroke="#ef4444" stroke-width="2" filter="url(#glow-amber)"/>
+    <circle cx="318" cy="975" r="5" fill="#ef4444" opacity="0.9"/>
+    <text x="318" y="979" text-anchor="middle" fill="#fff" font-size="8" font-weight="bold">!</text>
+    <text x="435" y="985" text-anchor="middle" fill="#ef4444" font-size="18" font-weight="700">ALERT</text>
+
+    <!-- ===== RIGHT PATH: PCAP WRITER ===== -->
+
+    <!-- PCAP WRITER -->
+    <rect x="1360" y="335" width="280" height="50" rx="6" fill="#0f1729" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="1500" y="365" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="700">PCAP WRITER</text>
+
+    <line x1="1500" y1="385" x2="1500" y2="410" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- captures/ directory container -->
+    <rect x="1340" y="415" width="320" height="200" rx="6" fill="#0c1524" stroke="#334155" stroke-width="1" stroke-dasharray="6,3"/>
+    <text x="1355" y="435" fill="#64748b" font-size="12" font-weight="600" letter-spacing="1">CAPTURES DIRECTORY</text>
+
+    <!-- active/current.pcap -->
+    <rect x="1370" y="448" width="260" height="48" rx="5" fill="#0f1729" stroke="#22c55e" stroke-width="1"/>
+    <circle cx="1393" cy="466" r="4" fill="#22c55e" opacity="0.8"/>
+    <text x="1406" y="464" fill="#22c55e" font-size="10" font-weight="600">RECORDING</text>
+    <text x="1393" y="484" fill="#c8d6e0" font-size="13" font-family="monospace">captures/active/current.pcap</text>
+
+    <!-- archive -->
+    <rect x="1370" y="510" width="260" height="42" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="1393" y="537" fill="#94a3b8" font-size="13" font-family="monospace">captures/archive/</text>
+
+    <!-- Rolling note -->
+    <text x="1500" y="575" text-anchor="middle" fill="#64748b" font-size="11" font-style="italic">Rolling capture &middot; Normal traffic discarded after processing</text>
+
+    <!-- ===== ALERT to PRESERVE PCAP connection ===== -->
+    <!-- Horizontal line from ALERT rightward -->
+    <line x1="550" y1="980" x2="730" y2="980" stroke="#ef4444" stroke-width="1.5" stroke-dasharray="5,3"/>
+
+    <!-- Preserve Relevant PCAP box -->
+    <rect x="735" y="958" width="280" height="48" rx="5" fill="#1c1917" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="875" y="977" text-anchor="middle" fill="#f59e0b" font-size="11" font-weight="600">ON THREAT DETECTED</text>
+    <text x="875" y="996" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Preserve Relevant PCAP</text>
+
+    <!-- Arrow to incidents/ -->
+    <line x1="1015" y1="982" x2="1110" y2="982" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+    <!-- incidents/ box -->
+    <rect x="1115" y="955" width="215" height="55" rx="5" fill="#1c1917" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="1222" y="974" text-anchor="middle" fill="#ef4444" font-size="10" font-weight="600">FORENSIC EVIDENCE</text>
+    <text x="1222" y="996" text-anchor="middle" fill="#c8d6e0" font-size="14" font-family="monospace">captures/incidents/</text>
+
+    <!-- Vertical arrow from incidents/ to captures/ container -->
+    <line x1="1222" y1="955" x2="1222" y2="620" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3"/>
+    <line x1="1222" y1="620" x2="1500" y2="620" stroke="#ef4444" stroke-width="1" stroke-dasharray="4,3" marker-end="url(#arrow-red)"/>
+
+    <!-- Annotation: Parallel paths note -->
+    <rect x="960" y="1020" width="560" height="30" rx="4" fill="#0ea5e9" fill-opacity="0.08" stroke="#0ea5e9" stroke-width="0.5" opacity="0.7"/>
+    <text x="1240" y="1040" text-anchor="middle" fill="#0ea5e9" font-size="12" font-weight="500">PCAP is an optional parallel recording mechanism &middot; NOT required for detection</text>
+
+    <!-- Parallel path emphasis bracket -->
+    <rect x="160" y="210" width="860" height="860" rx="8" fill="none" stroke="#0ea5e9" stroke-width="0.5" stroke-dasharray="8,4" opacity="0.15"/>
+    <text x="170" y="225" fill="#0ea5e9" font-size="10" opacity="0.4" font-weight="600">LIVE ANALYSIS PATH</text>
+
+    <rect x="1330" y="328" width="340" height="300" rx="8" fill="none" stroke="#f59e0b" stroke-width="0.5" stroke-dasharray="8,4" opacity="0.15"/>
+    <text x="1340" y="342" fill="#f59e0b" font-size="10" opacity="0.4" font-weight="600">PCAP RECORDING PATH</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 3: BACKEND PROJECT STRUCTURE                             -->
+  <!-- ================================================================ -->
+  <g id="project-structure">
+    <rect x="0" y="1070" width="1920" height="20" fill="#0a0f1a" opacity="0.5"/>
+    <text x="960" y="1120" text-anchor="middle" fill="#0ea5e9" font-size="24" font-weight="700" letter-spacing="2">BACKEND PROJECT STRUCTURE</text>
+    <line x1="740" y1="1132" x2="1180" y2="1132" stroke="#0ea5e9" stroke-width="1" opacity="0.3"/>
+
+    <!-- Left Column Background -->
+    <rect x="60" y="1150" width="880" height="1520" rx="8" fill="#0b1018" stroke="#1a2744" stroke-width="1"/>
+    <rect x="60" y="1150" width="880" height="32" rx="8" fill="#111827"/>
+    <circle cx="85" cy="1166" r="5" fill="#ef4444" opacity="0.8"/>
+    <circle cx="105" cy="1166" r="5" fill="#f59e0b" opacity="0.8"/>
+    <circle cx="125" cy="1166" r="5" fill="#22c55e" opacity="0.8"/>
+    <text x="500" y="1170" text-anchor="middle" fill="#64748b" font-size="12" font-family="monospace">unishield-backend/ (Part 1)</text>
+
+    <!-- Right Column Background -->
+    <rect x="980" y="1150" width="880" height="1520" rx="8" fill="#0b1018" stroke="#1a2744" stroke-width="1"/>
+    <rect x="980" y="1150" width="880" height="32" rx="8" fill="#111827"/>
+    <circle cx="1005" cy="1166" r="5" fill="#ef4444" opacity="0.8"/>
+    <circle cx="1025" cy="1166" r="5" fill="#f59e0b" opacity="0.8"/>
+    <circle cx="1045" cy="1166" r="5" fill="#22c55e" opacity="0.8"/>
+    <text x="1420" y="1170" text-anchor="middle" fill="#64748b" font-size="12" font-family="monospace">unishield-backend/ (Part 2)</text>
+
+    <!-- ===== LEFT COLUMN TREE ===== -->
+    <g fill="#c8d6e0" font-size="13" font-family="'Cascadia Code', 'Fira Code', 'Consolas', monospace">
+      <!-- app/ -->
+      <text x="85" y="1210" fill="#0ea5e9" font-weight="700">app/</text>
+      <text x="85" y="1232" fill="#94a3b8">  ├── </text><text x="140" y="1232" fill="#f59e0b" font-weight="600">main.py</text>
+      <text x="85" y="1254" fill="#94a3b8">  │</text>
+      <text x="85" y="1276" fill="#94a3b8">  ├── </text><text x="140" y="1276" fill="#22c55e" font-weight="600">api/</text>
+      <text x="85" y="1298" fill="#94a3b8">  │   ├── </text><text x="170" y="1298">health.py</text>
+      <text x="85" y="1320" fill="#94a3b8">  │   ├── </text><text x="170" y="1320">traffic.py</text>
+      <text x="85" y="1342" fill="#94a3b8">  │   ├── </text><text x="170" y="1342">alerts.py</text>
+      <text x="85" y="1364" fill="#94a3b8">  │   ├── </text><text x="170" y="1364">detection.py</text>
+      <text x="85" y="1386" fill="#94a3b8">  │   ├── </text><text x="170" y="1386">metrics.py</text>
+      <text x="85" y="1408" fill="#94a3b8">  │   ├── </text><text x="170" y="1408">models.py</text>
+      <text x="85" y="1430" fill="#94a3b8">  │   └── </text><text x="170" y="1430">websocket.py</text>
+      <text x="85" y="1452" fill="#94a3b8">  │</text>
+      <text x="85" y="1474" fill="#94a3b8">  ├── </text><text x="140" y="1474" fill="#22c55e" font-weight="600">core/</text>
+      <text x="85" y="1496" fill="#94a3b8">  │   ├── </text><text x="170" y="1496">config.py</text>
+      <text x="85" y="1518" fill="#94a3b8">  │   ├── </text><text x="170" y="1518">settings.py</text>
+      <text x="85" y="1540" fill="#94a3b8">  │   ├── </text><text x="170" y="1540">logging.py</text>
+      <text x="85" y="1562" fill="#94a3b8">  │   └── </text><text x="170" y="1562">constants.py</text>
+      <text x="85" y="1584" fill="#94a3b8">  │</text>
+      <text x="85" y="1606" fill="#94a3b8">  ├── </text><text x="140" y="1606" fill="#22c55e" font-weight="600">ingestion/</text>
+      <text x="85" y="1628" fill="#94a3b8">  │   ├── </text><text x="185" y="1628">base.py</text>
+      <text x="85" y="1650" fill="#94a3b8">  │   ├── </text><text x="185" y="1650">zeek.py</text>
+      <text x="85" y="1672" fill="#94a3b8">  │   ├── </text><text x="185" y="1672">scapy.py</text>
+      <text x="85" y="1694" fill="#94a3b8">  │   ├── </text><text x="185" y="1694">flow_parser.py</text>
+      <text x="85" y="1716" fill="#94a3b8">  │   ├── </text><text x="185" y="1716">stream.py</text>
+      <text x="85" y="1738" fill="#94a3b8">  │   └── </text><text x="185" y="1738">test_source.py</text>
+      <text x="85" y="1760" fill="#94a3b8">  │</text>
+      <text x="85" y="1782" fill="#94a3b8">  ├── </text><text x="140" y="1782" fill="#22c55e" font-weight="600">engine/</text>
+      <text x="85" y="1804" fill="#94a3b8">  │   └── </text><text x="170" y="1804">pipeline.py</text>
+      <text x="85" y="1826" fill="#94a3b8">  │</text>
+      <text x="85" y="1848" fill="#94a3b8">  ├── </text><text x="140" y="1848" fill="#a855f7" font-weight="600">rules/</text>
+      <text x="85" y="1870" fill="#94a3b8">  │   ├── </text><text x="170" y="1870">engine.py</text>
+      <text x="85" y="1892" fill="#94a3b8">  │   ├── </text><text x="170" y="1892">base.py</text>
+      <text x="85" y="1914" fill="#94a3b8">  │   ├── </text><text x="170" y="1914">signature.py</text>
+      <text x="85" y="1936" fill="#94a3b8">  │   ├── </text><text x="170" y="1936">statistical.py</text>
+      <text x="85" y="1958" fill="#94a3b8">  │   ├── </text><text x="170" y="1958">behavioral.py</text>
+      <text x="85" y="1980" fill="#94a3b8">  │   ├── </text><text x="170" y="1980">thresholds.py</text>
+      <text x="85" y="2002" fill="#94a3b8">  │   └── </text><text x="170" y="2002">registry.py</text>
+      <text x="85" y="2024" fill="#94a3b8">  │</text>
+      <text x="85" y="2046" fill="#94a3b8">  ├── </text><text x="140" y="2046" fill="#a855f7" font-weight="600">ml/</text>
+      <text x="85" y="2068" fill="#94a3b8">  │   ├── </text><text x="165" y="2068">engine.py</text>
+      <text x="85" y="2090" fill="#94a3b8">  │   ├── </text><text x="165" y="2090">preprocessing.py</text>
+      <text x="85" y="2112" fill="#94a3b8">  │   ├── </text><text x="165" y="2112">feature_schema.py</text>
+      <text x="85" y="2134" fill="#94a3b8">  │   ├── </text><text x="165" y="2134">supervised.py</text>
+      <text x="85" y="2156" fill="#94a3b8">  │   ├── </text><text x="165" y="2156">anomaly.py</text>
+      <text x="85" y="2178" fill="#94a3b8">  │   ├── </text><text x="165" y="2178">model_loader.py</text>
+      <text x="85" y="2200" fill="#94a3b8">  │   ├── </text><text x="165" y="2200">model_registry.py</text>
+      <text x="85" y="2222" fill="#94a3b8">  │   └── </text><text x="165" y="2222">inference.py</text>
+      <text x="85" y="2244" fill="#94a3b8">  │</text>
+      <text x="85" y="2266" fill="#94a3b8">  ├── </text><text x="140" y="2266" fill="#f59e0b" font-weight="600">decision/</text>
+      <text x="85" y="2288" fill="#94a3b8">  │   ├── </text><text x="180" y="2288">engine.py</text>
+      <text x="85" y="2310" fill="#94a3b8">  │   ├── </text><text x="180" y="2310">risk_fusion.py</text>
+      <text x="85" y="2332" fill="#94a3b8">  │   ├── </text><text x="180" y="2332">classifier.py</text>
+      <text x="85" y="2354" fill="#94a3b8">  │   ├── </text><text x="180" y="2354">confidence.py</text>
+      <text x="85" y="2376" fill="#94a3b8">  │   └── </text><text x="180" y="2376">severity.py</text>
+      <text x="85" y="2398" fill="#94a3b8">  │</text>
+      <text x="85" y="2420" fill="#94a3b8">  ├── </text><text x="140" y="2420" fill="#ef4444" font-weight="600">alerts/</text>
+      <text x="85" y="2442" fill="#94a3b8">  │   ├── </text><text x="170" y="2442">generator.py</text>
+      <text x="85" y="2464" fill="#94a3b8">  │   ├── </text><text x="170" y="2464">evidence.py</text>
+      <text x="85" y="2486" fill="#94a3b8">  │   ├── </text><text x="170" y="2486">manager.py</text>
+      <text x="85" y="2508" fill="#94a3b8">  │   └── </text><text x="170" y="2508">deduplicator.py</text>
+      <text x="85" y="2530" fill="#94a3b8">  │</text>
+      <text x="85" y="2552" fill="#94a3b8">  ├── </text><text x="140" y="2552" fill="#22c55e" font-weight="600">models/</text>
+      <text x="85" y="2574" fill="#94a3b8">  │   └── </text><text x="170" y="2574">database_models.py</text>
+      <text x="85" y="2596" fill="#94a3b8">  │</text>
+      <text x="85" y="2618" fill="#94a3b8">  └── </text><text x="140" y="2618" fill="#22c55e" font-weight="600">schemas/</text>
+      <text x="85" y="2640" fill="#94a3b8">      ├── </text><text x="175" y="2640">traffic.py</text>
+    </g>
+
+    <!-- ===== RIGHT COLUMN TREE ===== -->
+    <g fill="#c8d6e0" font-size="13" font-family="'Cascadia Code', 'Fira Code', 'Consolas', monospace">
+      <text x="1005" y="1210" fill="#94a3b8">      ├── </text><text x="1095" y="1210">features.py</text>
+      <text x="1005" y="1232" fill="#94a3b8">      ├── </text><text x="1095" y="1232">detection.py</text>
+      <text x="1005" y="1254" fill="#94a3b8">      ├── </text><text x="1095" y="1254">alert.py</text>
+      <text x="1005" y="1276" fill="#94a3b8">      └── </text><text x="1095" y="1276">metrics.py</text>
+      <text x="1005" y="1298" fill="#94a3b8">  │</text>
+
+      <text x="1005" y="1320" fill="#94a3b8">  ├── </text><text x="1060" y="1320" fill="#22c55e" font-weight="600">db/</text>
+      <text x="1005" y="1342" fill="#94a3b8">  │   ├── </text><text x="1085" y="1342">database.py</text>
+      <text x="1005" y="1364" fill="#94a3b8">  │   ├── </text><text x="1085" y="1364">alert_repository.py</text>
+      <text x="1005" y="1386" fill="#94a3b8">  │   └── </text><text x="1085" y="1386">metrics_repository.py</text>
+      <text x="1005" y="1408" fill="#94a3b8">  │</text>
+
+      <text x="1005" y="1430" fill="#94a3b8">  ├── </text><text x="1060" y="1430" fill="#0ea5e9" font-weight="600">realtime/</text>
+      <text x="1005" y="1452" fill="#94a3b8">  │   ├── </text><text x="1090" y="1452">manager.py</text>
+      <text x="1005" y="1474" fill="#94a3b8">  │   ├── </text><text x="1090" y="1474">publisher.py</text>
+      <text x="1005" y="1496" fill="#94a3b8">  │   └── </text><text x="1090" y="1496">events.py</text>
+      <text x="1005" y="1518" fill="#94a3b8">  │</text>
+
+      <text x="1005" y="1540" fill="#94a3b8">  ├── </text><text x="1060" y="1540" fill="#f59e0b" font-weight="600">state/</text>
+      <text x="1005" y="1562" fill="#94a3b8">  │   ├── </text><text x="1085" y="1562">flow_state.py</text>
+      <text x="1005" y="1584" fill="#94a3b8">  │   ├── </text><text x="1085" y="1584">rolling_window.py</text>
+      <text x="1005" y="1606" fill="#94a3b8">  │   ├── </text><text x="1085" y="1606">connection_tracker.py</text>
+      <text x="1005" y="1628" fill="#94a3b8">  │   └── </text><text x="1085" y="1628">expiry.py</text>
+      <text x="1005" y="1650" fill="#94a3b8">  │</text>
+
+      <text x="1005" y="1672" fill="#94a3b8">  ├── </text><text x="1060" y="1672" fill="#a855f7" font-weight="600">features/</text>
+      <text x="1005" y="1694" fill="#94a3b8">  │   ├── </text><text x="1090" y="1694">extractor.py</text>
+      <text x="1005" y="1716" fill="#94a3b8">  │   ├── </text><text x="1090" y="1716">flow.py</text>
+      <text x="1005" y="1738" fill="#94a3b8">  │   ├── </text><text x="1090" y="1738">tcp.py</text>
+      <text x="1005" y="1760" fill="#94a3b8">  │   ├── </text><text x="1090" y="1760">dns.py</text>
+      <text x="1005" y="1782" fill="#94a3b8">  │   ├── </text><text x="1090" y="1782">tls.py</text>
+      <text x="1005" y="1804" fill="#94a3b8">  │   ├── </text><text x="1090" y="1804">behavioral.py</text>
+      <text x="1005" y="1826" fill="#94a3b8">  │   └── </text><text x="1090" y="1826">statistics.py</text>
+      <text x="1005" y="1848" fill="#94a3b8">  │</text>
+
+      <text x="1005" y="1870" fill="#94a3b8">  └── </text><text x="1060" y="1870" fill="#94a3b8" font-weight="600">utils/</text>
+      <text x="1005" y="1892" fill="#94a3b8">      ├── </text><text x="1090" y="1892">ip.py</text>
+      <text x="1005" y="1914" fill="#94a3b8">      ├── </text><text x="1090" y="1914">time.py</text>
+      <text x="1005" y="1936" fill="#94a3b8">      ├── </text><text x="1090" y="1936">hashing.py</text>
+      <text x="1005" y="1958" fill="#94a3b8">      └── </text><text x="1090" y="1958">metrics.py</text>
+
+      <text x="1005" y="1990" fill="#64748b"># ── Non-app directories ──</text>
+
+      <text x="1005" y="2020" fill="#0ea5e9" font-weight="700">sensor/</text>
+      <text x="1005" y="2042" fill="#94a3b8">  ├── </text><text x="1060" y="2042" fill="#22c55e" font-weight="600">live_capture/</text>
+      <text x="1005" y="2064" fill="#94a3b8">  │   ├── </text><text x="1110" y="2064">capture.py</text>
+      <text x="1005" y="2086" fill="#94a3b8">  │   └── </text><text x="1110" y="2086">config.yaml</text>
+      <text x="1005" y="2108" fill="#94a3b8">  └── </text><text x="1060" y="2108" fill="#f59e0b" font-weight="600">pcap_writer/</text>
+      <text x="1005" y="2130" fill="#94a3b8">      ├── </text><text x="1105" y="2130">writer.py</text>
+      <text x="1005" y="2152" fill="#94a3b8">      └── </text><text x="1105" y="2152">config.yaml</text>
+
+      <text x="1005" y="2184" fill="#0ea5e9" font-weight="700">captures/</text>
+      <text x="1005" y="2206" fill="#94a3b8">  ├── </text><text x="1090" y="2206" fill="#22c55e" font-weight="600">active/</text>
+      <text x="1005" y="2228" fill="#94a3b8">  │   └── </text><text x="1100" y="2228">current.pcap</text>
+      <text x="1005" y="2250" fill="#94a3b8">  ├── </text><text x="1090" y="2250" fill="#ef4444" font-weight="600">incidents/</text>
+      <text x="1005" y="2272" fill="#94a3b8">  └── </text><text x="1090" y="2272" fill="#64748b" font-weight="600">archive/</text>
+
+      <text x="1005" y="2304" fill="#0ea5e9" font-weight="700">models/</text>
+      <text x="1005" y="2326" fill="#94a3b8">  ├── </text><text x="1080" y="2326" fill="#a855f7">xgboost/</text>
+      <text x="1005" y="2348" fill="#94a3b8">  ├── </text><text x="1080" y="2348" fill="#a855f7">random_forest/</text>
+      <text x="1005" y="2370" fill="#94a3b8">  ├── </text><text x="1080" y="2370" fill="#a855f7">isolation_forest/</text>
+      <text x="1005" y="2392" fill="#94a3b8">  └── </text><text x="1080" y="2392" fill="#a855f7">preprocessing/</text>
+
+      <text x="1005" y="2424" fill="#0ea5e9" font-weight="700">scripts/</text>
+      <text x="1005" y="2446" fill="#94a3b8">  ├── </text><text x="1080" y="2446">train_models.py</text>
+      <text x="1005" y="2468" fill="#94a3b8">  ├── </text><text x="1080" y="2468">evaluate_models.py</text>
+      <text x="1005" y="2490" fill="#94a3b8">  ├── </text><text x="1080" y="2490">generate_test_traffic.py</text>
+      <text x="1005" y="2512" fill="#94a3b8">  └── </text><text x="1080" y="2512">replay_pcap.py</text>
+
+      <text x="1005" y="2544" fill="#0ea5e9" font-weight="700">tests/</text>
+      <text x="1005" y="2566" fill="#94a3b8">  ├── </text><text x="1060" y="2566">unit/</text>
+      <text x="1005" y="2588" fill="#94a3b8">  └── </text><text x="1060" y="2588">integration/</text>
+
+      <text x="1005" y="2620" fill="#0ea5e9" font-weight="700">docs/</text>
+      <text x="1005" y="2642" fill="#94a3b8">  ├── </text><text x="1060" y="2642">architecture.md</text>
+      <text x="1005" y="2664" fill="#94a3b8">  ├── </text><text x="1060" y="2664">api.md</text>
+      <text x="1005" y="2686" fill="#94a3b8">  ├── </text><text x="1060" y="2686">detection.md</text>
+      <text x="1005" y="2708" fill="#94a3b8">  └── </text><text x="1060" y="2708">deployment.md</text>
+
+      <text x="1005" y="2740" fill="#64748b"># ── Root files ──</text>
+      <text x="1005" y="2762" fill="#94a3b8">├── </text><text x="1040" y="2762">.env.example</text>
+      <text x="1005" y="2784" fill="#94a3b8">├── </text><text x="1040" y="2784">requirements.txt</text>
+      <text x="1005" y="2806" fill="#94a3b8">├── </text><text x="1040" y="2806">Dockerfile</text>
+      <text x="1005" y="2828" fill="#94a3b8">├── </text><text x="1040" y="2828">docker-compose.yml</text>
+      <text x="1005" y="2850" fill="#94a3b8">└── </text><text x="1040" y="2850">README.md</text>
+    </g>
+
+    <!-- Color legend -->
+    <rect x="60" y="2690" width="880" height="35" rx="4" fill="#111827" stroke="#1a2744" stroke-width="0.5"/>
+    <circle cx="90" cy="2707" r="4" fill="#22c55e" opacity="0.7"/>
+    <text x="100" y="2711" fill="#94a3b8" font-size="11">Data/API</text>
+    <circle cx="190" cy="2707" r="4" fill="#a855f7" opacity="0.7"/>
+    <text x="200" y="2711" fill="#94a3b8" font-size="11">Detection</text>
+    <circle cx="290" cy="2707" r="4" fill="#f59e0b" opacity="0.7"/>
+    <text x="300" y="2711" fill="#94a3b8" font-size="11">Config/State</text>
+    <circle cx="410" cy="2707" r="4" fill="#ef4444" opacity="0.7"/>
+    <text x="420" y="2711" fill="#94a3b8" font-size="11">Alerts</text>
+    <circle cx="500" cy="2707" r="4" fill="#0ea5e9" opacity="0.7"/>
+    <text x="510" y="2711" fill="#94a3b8" font-size="11">Realtime</text>
+    <circle cx="600" cy="2707" r="4" fill="#f59e0b" opacity="0.7"/>
+    <text x="610" y="2711" fill="#94a3b8" font-size="11">Entry</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 4: COMPONENT RELATIONSHIPS                               -->
+  <!-- ================================================================ -->
+  <g id="component-relationships">
+    <rect x="0" y="2900" width="1920" height="20" fill="#0a0f1a" opacity="0.5"/>
+    <text x="960" y="2960" text-anchor="middle" fill="#0ea5e9" font-size="24" font-weight="700" letter-spacing="2">COMPONENT RELATIONSHIPS</text>
+    <line x1="740" y1="2972" x2="1180" y2="2972" stroke="#0ea5e9" stroke-width="1" opacity="0.3"/>
+
+    <!-- Row 1: Sensor -->
+    <rect x="80" y="3000" width="1760" height="90" rx="6" fill="#0c1524" stroke="#1a2744" stroke-width="1"/>
+    <rect x="80" y="3000" width="180" height="90" rx="6" fill="#0f1729" stroke="#0ea5e9" stroke-width="1.5"/>
+    <text x="170" y="3030" text-anchor="middle" fill="#0ea5e9" font-size="11" font-weight="600" letter-spacing="1">SENSOR</text>
+    <text x="170" y="3055" text-anchor="middle" fill="#e2e8f0" font-size="16" font-weight="700">SPAN / TAP</text>
+    <text x="170" y="3075" text-anchor="middle" fill="#64748b" font-size="11">Zeek + Scapy</text>
+
+    <text x="280" y="3050" fill="#475569" font-size="16">→</text>
+
+    <rect x="320" y="3015" width="250" height="60" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="445" y="3040" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Flow Metadata</text>
+    <text x="445" y="3060" text-anchor="middle" fill="#64748b" font-size="11">5-tuple + features</text>
+
+    <text x="590" y="3050" fill="#475569" font-size="16">→</text>
+
+    <rect x="630" y="3015" width="250" height="60" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="755" y="3040" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">FastAPI Backend</text>
+    <text x="755" y="3060" text-anchor="middle" fill="#64748b" font-size="11">POST /api/v1/traffic/flow</text>
+
+    <text x="900" y="3050" fill="#475569" font-size="16">→</text>
+
+    <rect x="940" y="3015" width="250" height="60" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="1065" y="3040" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Ingestion Layer</text>
+    <text x="1065" y="3060" text-anchor="middle" fill="#64748b" font-size="11">Async processing pipeline</text>
+
+    <text x="1200" y="3050" fill="#475569" font-size="16">→</text>
+
+    <rect x="1240" y="3015" width="250" height="60" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="1365" y="3040" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Detection Pipeline</text>
+    <text x="1365" y="3060" text-anchor="middle" fill="#64748b" font-size="11">Rules + AI/ML parallel</text>
+
+    <text x="1500" y="3050" fill="#475569" font-size="16">→</text>
+
+    <rect x="1540" y="3015" width="280" height="60" rx="5" fill="#0f1729" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="1680" y="3040" text-anchor="middle" fill="#ef4444" font-size="14" font-weight="700">Alert + WebSocket</text>
+    <text x="1680" y="3060" text-anchor="middle" fill="#64748b" font-size="11">Real-time → React Dashboard</text>
+
+    <!-- Row 2: Feature Engine Details -->
+    <rect x="80" y="3110" width="1760" height="100" rx="6" fill="#0c1524" stroke="#1a2744" stroke-width="1"/>
+    <rect x="80" y="3110" width="200" height="100" rx="6" fill="#0f1729" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="180" y="3140" text-anchor="middle" fill="#a855f7" font-size="11" font-weight="600" letter-spacing="1">FEATURE ENGINE</text>
+    <text x="180" y="3165" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">Extracts Features</text>
+    <text x="180" y="3185" text-anchor="middle" fill="#64748b" font-size="11">Flow → ML Features</text>
+
+    <!-- Feature list -->
+    <text x="320" y="3140" fill="#94a3b8" font-size="12" font-family="monospace">packet_count</text>
+    <text x="320" y="3158" fill="#94a3b8" font-size="12" font-family="monospace">byte_count</text>
+    <text x="320" y="3176" fill="#94a3b8" font-size="12" font-family="monospace">packets_per_sec</text>
+    <text x="320" y="3194" fill="#94a3b8" font-size="12" font-family="monospace">bytes_per_sec</text>
+
+    <text x="510" y="3140" fill="#94a3b8" font-size="12" font-family="monospace">syn_ratio</text>
+    <text x="510" y="3158" fill="#94a3b8" font-size="12" font-family="monospace">unique_dst_ports</text>
+    <text x="510" y="3176" fill="#94a3b8" font-size="12" font-family="monospace">unique_dst_ips</text>
+    <text x="510" y="3194" fill="#94a3b8" font-size="12" font-family="monospace">conn_frequency</text>
+
+    <text x="710" y="3140" fill="#94a3b8" font-size="12" font-family="monospace">inter_arrival_time</text>
+    <text x="710" y="3158" fill="#94a3b8" font-size="12" font-family="monospace">periodicity</text>
+    <text x="710" y="3176" fill="#94a3b8" font-size="12" font-family="monospace">dns_entropy</text>
+    <text x="710" y="3194" fill="#94a3b8" font-size="12" font-family="monospace">outbound_inbound_ratio</text>
+
+    <!-- Separator -->
+    <line x1="940" y1="3125" x2="940" y2="3195" stroke="#1a2744" stroke-width="1"/>
+
+    <!-- Rules vs AI/ML comparison -->
+    <rect x="960" y="3120" width="370" height="80" rx="5" fill="#0f1729" stroke="#22c55e" stroke-width="1"/>
+    <text x="1145" y="3145" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">THREE RULE PATHS</text>
+    <text x="980" y="3165" fill="#c8d6e0" font-size="12">1. Signature Rules — Pattern matching</text>
+    <text x="980" y="3183" fill="#c8d6e0" font-size="12">2. Statistical Rules — Thresholds &amp; baselines</text>
+    <text x="980" y="3201" fill="#c8d6e0" font-size="12">3. Behavioral Rules — Anomaly patterns</text>
+
+    <rect x="1370" y="3120" width="450" height="80" rx="5" fill="#0f1729" stroke="#a855f7" stroke-width="1"/>
+    <text x="1595" y="3145" text-anchor="middle" fill="#a855f7" font-size="13" font-weight="700">TWO ML APPROACHES (PARALLEL)</text>
+    <text x="1390" y="3168" fill="#c8d6e0" font-size="12">1. Supervised: XGBoost — Classification</text>
+    <text x="1390" y="3188" fill="#c8d6e0" font-size="12">2. Anomaly: Isolation Forest — Outlier detection</text>
+
+    <!-- Annotation -->
+    <rect x="380" y="3230" width="500" height="24" rx="3" fill="#22c55e" fill-opacity="0.08" stroke="#22c55e" stroke-width="0.5" opacity="0.6"/>
+    <text x="630" y="3247" text-anchor="middle" fill="#22c55e" font-size="11" font-weight="500">Rules and AI/ML operate in PARALLEL, not sequentially</text>
+
+    <rect x="920" y="3230" width="500" height="24" rx="3" fill="#a855f7" fill-opacity="0.08" stroke="#a855f7" stroke-width="0.5" opacity="0.6"/>
+    <text x="1170" y="3247" text-anchor="middle" fill="#a855f7" font-size="11" font-weight="500">Each model produces independent probability scores</text>
+
+    <!-- Row 3: Decision Engine & Alert Output -->
+    <rect x="80" y="3270" width="1760" height="120" rx="6" fill="#0c1524" stroke="#1a2744" stroke-width="1"/>
+
+    <rect x="100" y="3285" width="280" height="90" rx="5" fill="#0f1729" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="240" y="3310" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="700">DECISION ENGINE</text>
+    <text x="120" y="3333" fill="#c8d6e0" font-size="12">Combines: signature_score</text>
+    <text x="120" y="3351" fill="#c8d6e0" font-size="12">+ statistical_score + behavioral_score</text>
+    <text x="120" y="3369" fill="#c8d6e0" font-size="12">+ ml_probability + anomaly_score</text>
+
+    <text x="410" y="3335" fill="#f59e0b" font-size="20">→</text>
+
+    <rect x="450" y="3285" width="280" height="90" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="590" y="3310" text-anchor="middle" fill="#e2e8f0" font-size="12" font-weight="700">OUTPUT CALCULATES</text>
+    <text x="470" y="3333" fill="#c8d6e0" font-size="12">• risk_score [0-100]</text>
+    <text x="470" y="3351" fill="#c8d6e0" font-size="12">• confidence [0-1]</text>
+    <text x="470" y="3369" fill="#c8d6e0" font-size="12">• threat_class + severity</text>
+
+    <text x="760" y="3335" fill="#f59e0b" font-size="20">→</text>
+
+    <rect x="800" y="3285" width="520" height="90" rx="5" fill="#0f1729" stroke="#ef4444" stroke-width="1.5"/>
+    <text x="1060" y="3308" text-anchor="middle" fill="#ef4444" font-size="12" font-weight="700">ALERT OUTPUT — EXPLAINABLE</text>
+    <text x="820" y="3328" fill="#c8d6e0" font-size="11" font-family="monospace">alert_id | timestamp | src_ip | dst_ip | proto</text>
+    <text x="820" y="3348" fill="#c8d6e0" font-size="11" font-family="monospace">threat_type | severity | confidence | risk_score</text>
+    <text x="820" y="3368" fill="#c8d6e0" font-size="11" font-family="monospace">evidence[] | detection_sources[] | pcap_ref</text>
+
+    <text x="1340" y="3335" fill="#f59e0b" font-size="20">→</text>
+
+    <rect x="1380" y="3285" width="430" height="90" rx="5" fill="#0f1729" stroke="#0ea5e9" stroke-width="1.5"/>
+    <text x="1595" y="3308" text-anchor="middle" fill="#0ea5e9" font-size="12" font-weight="700">PCAP HANDLING</text>
+    <text x="1400" y="3330" fill="#c8d6e0" font-size="12">PCAP is NOT the primary detection input</text>
+    <text x="1400" y="3350" fill="#c8d6e0" font-size="12">On alert → Preserve relevant traffic</text>
+    <text x="1400" y="3370" fill="#c8d6e0" font-size="12">→ captures/incidents/ for forensics</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 5: COMMUNICATION FLOW                                    -->
+  <!-- ================================================================ -->
+  <g id="communication">
+    <rect x="0" y="3420" width="1920" height="20" fill="#0a0f1a" opacity="0.5"/>
+    <text x="960" y="3475" text-anchor="middle" fill="#0ea5e9" font-size="24" font-weight="700" letter-spacing="2">COMMUNICATION FLOW</text>
+    <line x1="780" y1="3487" x2="1140" y2="3487" stroke="#0ea5e9" stroke-width="1" opacity="0.3"/>
+
+    <!-- Main flow -->
+    <rect x="80" y="3510" width="1760" height="110" rx="6" fill="#0c1524" stroke="#1a2744" stroke-width="1"/>
+
+    <!-- Network Switch/TAP -->
+    <rect x="100" y="3530" width="200" height="70" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="200" y="3558" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">Network Switch</text>
+    <text x="200" y="3578" text-anchor="middle" fill="#e2e8f0" font-size="13" font-weight="600">/ TAP</text>
+    <text x="200" y="3596" text-anchor="middle" fill="#64748b" font-size="10">Physical tap point</text>
+
+    <text x="315" y="3570" fill="#475569" font-size="18">→</text>
+    <text x="315" y="3588" fill="#64748b" font-size="9" text-anchor="middle">Mirrored</text>
+    <text x="315" y="3600" fill="#64748b" font-size="9" text-anchor="middle">Packets</text>
+
+    <!-- UniShield Sensor -->
+    <rect x="350" y="3530" width="200" height="70" rx="5" fill="#0f1729" stroke="#0ea5e9" stroke-width="1.5"/>
+    <text x="450" y="3558" text-anchor="middle" fill="#0ea5e9" font-size="13" font-weight="700">UniShield Sensor</text>
+    <text x="450" y="3578" text-anchor="middle" fill="#c8d6e0" font-size="11">Zeek / Scapy</text>
+    <text x="450" y="3596" text-anchor="middle" fill="#64748b" font-size="10">Flow extraction</text>
+
+    <text x="565" y="3570" fill="#475569" font-size="18">→</text>
+    <text x="565" y="3588" fill="#64748b" font-size="9" text-anchor="middle">Flow</text>
+    <text x="565" y="3600" fill="#64748b" font-size="9" text-anchor="middle">Metadata</text>
+
+    <!-- FastAPI Backend -->
+    <rect x="600" y="3530" width="220" height="70" rx="5" fill="#0f1729" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="710" y="3555" text-anchor="middle" fill="#22c55e" font-size="13" font-weight="700">FastAPI Backend</text>
+    <text x="710" y="3575" text-anchor="middle" fill="#c8d6e0" font-size="11">POST /api/v1/traffic/flow</text>
+    <text x="710" y="3593" text-anchor="middle" fill="#64748b" font-size="10">HTTP (prototype) → Streaming (prod)</text>
+
+    <text x="835" y="3570" fill="#475569" font-size="18">→</text>
+
+    <!-- Two output paths -->
+    <rect x="870" y="3520" width="140" height="35" rx="4" fill="#0ea5e9" fill-opacity="0.1" stroke="#0ea5e9" stroke-width="0.8"/>
+    <text x="940" y="3543" text-anchor="middle" fill="#0ea5e9" font-size="12" font-weight="600">REST API</text>
+    <text x="895" y="3563" fill="#64748b" font-size="9">Initial/Query Data</text>
+
+    <rect x="870" y="3585" width="140" height="35" rx="4" fill="#0ea5e9" fill-opacity="0.1" stroke="#0ea5e9" stroke-width="0.8"/>
+    <text x="940" y="3608" text-anchor="middle" fill="#0ea5e9" font-size="12" font-weight="600">WebSocket</text>
+    <text x="885" y="3618" fill="#64748b" font-size="9">Live Events Stream</text>
+
+    <text x="1030" y="3570" fill="#475569" font-size="18">→</text>
+
+    <!-- React Dashboard -->
+    <rect x="1070" y="3520" width="240" height="75" rx="5" fill="#0f1729" stroke="#06b6d4" stroke-width="1.5"/>
+    <text x="1190" y="3548" text-anchor="middle" fill="#06b6d4" font-size="13" font-weight="700">React Dashboard</text>
+    <text x="1190" y="3568" text-anchor="middle" fill="#c8d6e0" font-size="11">Real-time SOC Visualization</text>
+    <text x="1190" y="3586" text-anchor="middle" fill="#64748b" font-size="10">React + TypeScript + Zustand</text>
+
+    <text x="1330" y="3560" fill="#475569" font-size="18">→</text>
+
+    <!-- Outputs -->
+    <rect x="1370" y="3520" width="200" height="32" rx="4" fill="#22c55e" fill-opacity="0.1" stroke="#22c55e" stroke-width="0.8"/>
+    <text x="1470" y="3541" text-anchor="middle" fill="#22c55e" font-size="12" font-weight="600">Dashboard View</text>
+
+    <rect x="1370" y="3560" width="200" height="32" rx="4" fill="#f59e0b" fill-opacity="0.1" stroke="#f59e0b" stroke-width="0.8"/>
+    <text x="1470" y="3581" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="600">Alert Notifications</text>
+
+    <rect x="1370" y="3600" width="200" height="32" rx="4" fill="#a855f7" fill-opacity="0.1" stroke="#a855f7" stroke-width="0.8"/>
+    <text x="1470" y="3621" text-anchor="middle" fill="#a855f7" font-size="12" font-weight="600">Forensic Controls</text>
+
+    <!-- WebSocket event example -->
+    <rect x="1600" y="3510" width="230" height="110" rx="5" fill="#0b1018" stroke="#0ea5e9" stroke-width="0.8"/>
+    <text x="1615" y="3530" fill="#0ea5e9" font-size="10" font-weight="600">WebSocket Event:</text>
+    <text x="1615" y="3548" fill="#94a3b8" font-size="10" font-family="monospace">{</text>
+    <text x="1615" y="3562" fill="#94a3b8" font-size="10" font-family="monospace">  type: "threat_detected",</text>
+    <text x="1615" y="3576" fill="#94a3b8" font-size="10" font-family="monospace">  severity: "high",</text>
+    <text x="1615" y="3590" fill="#94a3b8" font-size="10" font-family="monospace">  risk_score: 91,</text>
+    <text x="1615" y="3604" fill="#94a3b8" font-size="10" font-family="monospace">  confidence: 0.94</text>
+    <text x="1615" y="3618" fill="#94a3b8" font-size="10" font-family="monospace">}</text>
+  </g>
+
+  <!-- ================================================================ -->
+  <!-- SECTION 6: FINAL DATA FLOW PIPELINE                             -->
+  <!-- ================================================================ -->
+  <g id="final-pipeline">
+    <rect x="0" y="3660" width="1920" height="20" fill="#0a0f1a" opacity="0.5"/>
+    <text x="960" y="3715" text-anchor="middle" fill="#0ea5e9" font-size="24" font-weight="700" letter-spacing="2">FINAL DATA FLOW</text>
+    <line x1="800" y1="3727" x2="1120" y2="3727" stroke="#0ea5e9" stroke-width="1" opacity="0.3"/>
+
+    <!-- Main pipeline background -->
+    <rect x="120" y="3750" width="1680" height="800" rx="10" fill="#0a0f14" stroke="#1a2744" stroke-width="1"/>
+
+    <!-- NETWORK -->
+    <rect x="830" y="3780" width="220" height="48" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1.5"/>
+    <text x="940" y="3810" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700">NETWORK</text>
+
+    <line x1="940" y1="3828" x2="940" y2="3858" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- SPAN / TAP -->
+    <rect x="830" y="3862" width="220" height="48" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1.5"/>
+    <text x="940" y="3892" text-anchor="middle" fill="#e2e8f0" font-size="15" font-weight="700">SPAN / TAP</text>
+
+    <line x1="940" y1="3910" x2="940" y2="3940" stroke="#475569" stroke-width="2" marker-end="url(#arrow-gray)"/>
+
+    <!-- MIRRORED TRAFFIC -->
+    <rect x="800" y="3944" width="280" height="50" rx="6" fill="#0f1729" stroke="#0ea5e9" stroke-width="2" filter="url(#glow-cyan)"/>
+    <text x="940" y="3975" text-anchor="middle" fill="#00d4ff" font-size="16" font-weight="700">MIRRORED TRAFFIC</text>
+
+    <!-- Split -->
+    <line x1="940" y1="3994" x2="940" y2="4018" stroke="#475569" stroke-width="2"/>
+    <circle cx="940" cy="4025" r="4" fill="#0ea5e9"/>
+
+    <!-- Left path: LIVE ANALYSIS -->
+    <line x1="940" y1="4025" x2="440" y2="4025" stroke="#00d4ff" stroke-width="1.5"/>
+    <line x1="440" y1="4025" x2="440" y2="4050" stroke="#00d4ff" stroke-width="1.5" marker-end="url(#arrow-cyan)"/>
+
+    <!-- Right path: PCAP WRITER -->
+    <line x1="940" y1="4025" x2="1440" y2="4025" stroke="#f59e0b" stroke-width="1.5"/>
+    <line x1="1440" y1="4025" x2="1440" y2="4050" stroke="#f59e0b" stroke-width="1.5" marker-end="url(#arrow-amber)"/>
+
+    <!-- Path labels -->
+    <rect x="540" y="4012" width="160" height="18" rx="3" fill="#0ea5e9" fill-opacity="0.1" stroke="#0ea5e9" stroke-width="0.5" opacity="0.7"/>
+    <text x="620" y="4025" text-anchor="middle" fill="#00d4ff" font-size="9" font-weight="600">LIVE ANALYSIS</text>
+
+    <rect x="1130" y="4012" width="160" height="18" rx="3" fill="#f59e0b" fill-opacity="0.1" stroke="#f59e0b" stroke-width="0.5" opacity="0.7"/>
+    <text x="1210" y="4025" text-anchor="middle" fill="#f59e0b" font-size="9" font-weight="600">PCAP RECORDING</text>
+
+    <!-- LEFT PATH BOXES -->
+    <!-- FLOW PROCESSOR -->
+    <rect x="310" y="4055" width="260" height="45" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="440" y="4083" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">FLOW PROCESSOR</text>
+
+    <line x1="440" y1="4100" x2="440" y2="4120" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+    <!-- FEATURE ENGINE -->
+    <rect x="310" y="4125" width="260" height="45" rx="5" fill="#0f1729" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="440" y="4153" text-anchor="middle" fill="#a855f7" font-size="14" font-weight="600">FEATURE ENGINE</text>
+
+    <!-- Split to Rules + AI/ML -->
+    <line x1="440" y1="4170" x2="440" y2="4188" stroke="#475569" stroke-width="1.5"/>
+    <line x1="440" y1="4188" x2="310" y2="4188" stroke="#475569" stroke-width="1"/>
+    <line x1="310" y1="4188" x2="310" y2="4205" stroke="#22c55e" stroke-width="1.5" marker-end="url(#arrow-green)"/>
+    <line x1="440" y1="4188" x2="570" y2="4188" stroke="#475569" stroke-width="1"/>
+    <line x1="570" y1="4188" x2="570" y2="4205" stroke="#a855f7" stroke-width="1.5" marker-end="url(#arrow-purple)"/>
+
+    <!-- RULES -->
+    <rect x="200" y="4210" width="220" height="42" rx="5" fill="#0c1524" stroke="#22c55e" stroke-width="1.5"/>
+    <text x="310" y="4237" text-anchor="middle" fill="#22c55e" font-size="14" font-weight="700">THREE RULES</text>
+
+    <!-- AI/ML -->
+    <rect x="460" y="4210" width="220" height="42" rx="5" fill="#0c1524" stroke="#a855f7" stroke-width="1.5"/>
+    <text x="570" y="4237" text-anchor="middle" fill="#a855f7" font-size="14" font-weight="700">AI / ML</text>
+
+    <!-- Merge -->
+    <line x1="310" y1="4252" x2="310" y2="4272" stroke="#22c55e" stroke-width="1"/>
+    <line x1="310" y1="4272" x2="440" y2="4272" stroke="#475569" stroke-width="1"/>
+    <line x1="570" y1="4252" x2="570" y2="4272" stroke="#a855f7" stroke-width="1"/>
+    <line x1="570" y1="4272" x2="440" y2="4272" stroke="#475569" stroke-width="1"/>
+    <line x1="440" y1="4272" x2="440" y2="4290" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+    <!-- DECISION ENGINE -->
+    <rect x="310" y="4295" width="260" height="45" rx="5" fill="#0f1729" stroke="#f59e0b" stroke-width="2"/>
+    <text x="440" y="4323" text-anchor="middle" fill="#f59e0b" font-size="14" font-weight="700">DECISION ENGINE</text>
+
+    <line x1="440" y1="4340" x2="440" y2="4360" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+    <!-- RISK SCORE -->
+    <rect x="340" y="4365" width="200" height="40" rx="5" fill="#0f1729" stroke="#334155" stroke-width="1"/>
+    <text x="440" y="4390" text-anchor="middle" fill="#e2e8f0" font-size="14" font-weight="600">RISK SCORE</text>
+
+    <line x1="440" y1="4405" x2="440" y2="4425" stroke="#ef4444" stroke-width="1.5" marker-end="url(#arrow-red)"/>
+
+    <!-- ALERT -->
+    <rect x="350" y="4430" width="180" height="45" rx="5" fill="#1c1917" stroke="#ef4444" stroke-width="2" filter="url(#glow-amber)"/>
+    <text x="440" y="4458" text-anchor="middle" fill="#ef4444" font-size="16" font-weight="700">ALERT</text>
+
+    <!-- ALERT outputs -->
+    <line x1="440" y1="4475" x2="440" y2="4492" stroke="#475569" stroke-width="1"/>
+    <line x1="440" y1="4492" x2="200" y2="4492" stroke="#0ea5e9" stroke-width="1"/>
+    <line x1="200" y1="4492" x2="200" y2="4508" stroke="#0ea5e9" stroke-width="1" marker-end="url(#arrow-cyan)"/>
+
+    <line x1="440" y1="4492" x2="680" y2="4492" stroke="#f59e0b" stroke-width="1"/>
+    <line x1="680" y1="4492" x2="680" y2="4508" stroke="#f59e0b" stroke-width="1" marker-end="url(#arrow-amber)"/>
+
+    <!-- Dashboard output -->
+    <rect x="110" y="4512" width="180" height="35" rx="4" fill="#0ea5e9" fill-opacity="0.1" stroke="#0ea5e9" stroke-width="1"/>
+    <text x="200" y="4534" text-anchor="middle" fill="#0ea5e9" font-size="12" font-weight="600">Dashboard</text>
+
+    <!-- incidents/ output -->
+    <rect x="590" y="4512" width="180" height="35" rx="4" fill="#f59e0b" fill-opacity="0.1" stroke="#f59e0b" stroke-width="1"/>
+    <text x="680" y="4534" text-anchor="middle" fill="#f59e0b" font-size="12" font-weight="600">Preserve PCAP</text>
+    <text x="680" y="4548" text-anchor="middle" fill="#64748b" font-size="9">→ incidents/</text>
+
+    <!-- RIGHT PATH: PCAP WRITER -->
+    <rect x="1310" y="4055" width="260" height="45" rx="5" fill="#0f1729" stroke="#f59e0b" stroke-width="1.5"/>
+    <text x="1440" y="4083" text-anchor="middle" fill="#f59e0b" font-size="14" font-weight="600">PCAP WRITER</text>
+
+    <line x1="1440" y1="4100" x2="1440" y2="4120" stroke="#475569" stroke-width="1.5" marker-end="url(#arrow-gray)"/>
+
+    <!-- captures/active/ -->
+    <rect x="1330" y="4125" width="220" height="55" rx="5" fill="#0c1524" stroke="#22c55e" stroke-width="1"/>
+    <circle cx="1358" cy="4145" r="4" fill="#22c55e" opacity="0.8"/>
+    <text x="1370" y="4149" fill="#22c55e" font-size="10" font-weight="600">ROLLING CAPTURE</text>
+    <text x="1440" y="4172" text-anchor="middle" fill="#c8d6e0" font-size="12" font-family="monospace">captures/active/</text>
+
+    <!-- Normal traffic discarded note -->
+    <rect x="1330" y="4200" width="220" height="25" rx="3" fill="#1e293b" opacity="0.5"/>
+    <text x="1440" y="4217" text-anchor="middle" fill="#64748b" font-size="10">Normal traffic discarded</text>
+    <text x="1440" y="4229" text-anchor="middle" fill="#64748b" font-size="10">after processing</text>
+
+    <!-- Legend box at bottom -->
+    <rect x="800" y="4560" width="400" height="20" rx="3" fill="#0ea5e9" fill-opacity="0.06" stroke="#0ea5e9" stroke-width="0.3" opacity="0.5"/>
+    <text x="1000" y="4574" text-anchor="middle" fill="#64748b" font-size="10">Backend owns detection. Frontend is a visualization/control plane.</text>
+  </g>
+</svg>

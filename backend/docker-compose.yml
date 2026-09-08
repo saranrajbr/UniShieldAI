@@ -1,0 +1,13 @@
+services:
+  unishield-backend:
+    build: .
+    container_name: unishield-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./captures:/app/captures
+      - ./models:/app/models
+      - ./logs:/app/logs
+    env_file:
+      - .env.example
+    restart: unless-stopped
