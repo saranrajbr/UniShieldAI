@@ -20,7 +20,23 @@ const MAX_TOASTS = 5;
 
 /** Alert IDs we have already surfaced — polling baselines never re-toast. */
 const seenIds = new Set<string>();
+let baselineSeen = false;
 let toastSeq = 0;
+
+function markNew(list: Alert[]): Alert[] {
+  // First poll is the session baseline: existing alerts are NOT new, so they
+  // never toast. Afterwards any id the poll discovers that we haven't seen is
+  // a genuinely new detection — toast it as a WebSocket fallback (the WS can
+  // drop/reconnect and otherwise swallow the notification).
+  if (!baselineSeen) {
+    list.forEach((a) => a.alert_id && seenIds.add(a.alert_id));
+    baselineSeen = true;
+    return [];
+  }
+  const fresh = list.filter((a) => a.alert_id && !seenIds.has(a.alert_id));
+  fresh.forEach((a) => a.alert_id && seenIds.add(a.alert_id));
+  return fresh;
+}
 
 export type ToastKind = "alert";
 
@@ -218,9 +234,12 @@ export const useEngine = create<EngineState>((set, get) => ({
         error: ok === 0 ? "Backend engine unreachable" : null,
       };
       if (alerts.status === "fulfilled") {
-        const list = alerts.value.alerts;
-        list.forEach((a) => a.alert_id && seenIds.add(a.alert_id));
-        patch.alerts = list.slice(0, MAX_ALERTS);
+        const list = alerts.value.alerts.slice(0, MAX_ALERTS);
+        const fresh = markNew(list);
+        patch.alerts = list;
+        if (fresh.length) {
+          patch.toasts = [...get().toasts, ...fresh.map(makeAlertToast)].slice(-MAX_TOASTS);
+        }
       }
       if (stats.status === "fulfilled") patch.stats = stats.value;
       if (metrics.status === "fulfilled") {
@@ -256,11 +275,14 @@ export const useEngine = create<EngineState>((set, get) => ({
   refreshAlerts: async () => {
     try {
       const resp = await api.alerts();
-      const list = resp.alerts;
-      list.forEach((a) => a.alert_id && seenIds.add(a.alert_id));
+      const list = resp.alerts.slice(0, MAX_ALERTS);
+      const fresh = markNew(list);
       set((s) => ({
-        alerts: list.slice(0, MAX_ALERTS),
+        alerts: list,
         sources: sourcesFromAlertsAndFlows(s.sources, list, s.flows),
+        toasts: fresh.length
+          ? [...s.toasts, ...fresh.map(makeAlertToast)].slice(-MAX_TOASTS)
+          : s.toasts,
         error: null,
       }));
     } catch (err) {
@@ -288,7 +310,7 @@ export const useEngine = create<EngineState>((set, get) => ({
     set((s) => {
       const alerts = isNew
         ? [alert, ...s.alerts.filter((a) => a.alert_id !== key)].slice(0, MAX_ALERTS)
-        : s.alerts;
+        : s.alerts.map((a) => (a.alert_id === key ? alert : a));
       const sources = bumpSource(s.sources, alert.src_ip, {
         proto: alert.protocol ?? undefined,
         dst: alert.dst_ip,

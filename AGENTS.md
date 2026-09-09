@@ -48,10 +48,17 @@ pydantic, aiosqlite, pytest, pytest-asyncio, httpx).
   `/ws/alerts` for bare alert broadcasts, 2s source-activity tick, reconnect,
   mounted in `AppFrame`). New detections raise a slide-in toast popup
   (click → investigation) and a separate "Attack ended" toast fires ~20s after
-  a source stops sending. Backend timestamps are naive UTC — `parseApiTs` in
-  `api.ts` appends `Z` so `timeAgo`/`formatTs` show real ages (`4h` bug was
-  naive timestamps parsed as local). The Overview trend keeps 24 × 5s samples
-  (≈2 min) so the chart never gaps like the old 5-minute window.
+  a source stops sending. Alert delivery: while a flood keeps hitting the same
+  (dst, proto, threat, severity) the backend **merges** into the existing
+  alert and re-broadcasts a ~2s live pulse (`AlertManager._pulse`) so the UI's
+  aggregation counts/timestamp keep updating; the frontend **upserts** already-
+  seen alert ids instead of ignoring them. The 5s poll baselines existing
+  alerts once and afterwards toasts genuinely-new ids it discovers (WS-failure
+  fallback). `GET /api/v1/alerts` returns live-session alerts only (never the
+  full DB history) so floods can't bias the window. Backend timestamps are naive
+  UTC — `parseApiTs` in `api.ts` appends `Z` so `timeAgo`/`formatTs` show real
+  ages (`4h` bug was naive timestamps parsed as local). The Overview trend keeps
+  24 × 5s samples (≈2 min) so the chart never gaps like the old 5-minute window.
 - Routes (6, `createBrowserRouter`): `/` Overview, `/alerts`, `/traffic`,
   `/engine`, `/about`, `/investigation/:id`. Sidebar lists these 5 pages
   (alerts item carries a live open-count badge) plus a collapse toggle.
@@ -118,6 +125,11 @@ pydantic, aiosqlite, pytest, pytest-asyncio, httpx).
 
 ## Gotchas
 
+- `dedup_window_sec` is 300: re-sending the same (dst, proto, threat,
+  severity) within 5 min merges into the old alert (live WS pulse, no new id),
+  so a fresh sim to the same victim won't emit a new alert/toast until the
+  window lapses — restart the backend (or use a new scenario/target) for clean
+  demos.
 - No root `.gitignore` — only `frontend/.gitignore` exists (`dist/` and
   `node_modules/` are ignored).
 - No CI workflows, no pre-commit hooks.

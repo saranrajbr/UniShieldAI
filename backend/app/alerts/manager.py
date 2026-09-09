@@ -19,6 +19,10 @@ class AlertContext:
     fingerprint: str
     pcap_path: str | None = None
     emitted_at: float = field(default_factory=time.time)
+    last_published_at: float = field(default_factory=time.time)
+
+
+PULSE_INTERVAL_SEC = 2.0
 
 
 class AlertManager:
@@ -48,6 +52,7 @@ class AlertManager:
         # source into the existing alert instead of raising a fresh one.
         if active is not None and self.deduplicator.is_suppressed(alert, fingerprint):
             merge_alert_context(active, alert)
+            self._pulse(active)
             return None
 
         if not self.deduplicator.should_emit(alert, fingerprint):
@@ -77,6 +82,21 @@ class AlertManager:
             alert.risk_score, alert.confidence,
         )
         return ctx
+
+    def _pulse(self, ctx: AlertContext) -> None:
+        """Re-broadcast a live pulse for an ongoing, already-emitted alert.
+
+        While a flood continues inside the dedup window it merges into the
+        existing context (aggregation counts, fresh timestamp); the UI should
+        see that growth in near-real-time rather than nothing until the window
+        elapses. Throttled so a 30-fps flood does not flood WebSockets too.
+        """
+        now = time.time()
+        if now - ctx.last_published_at < PULSE_INTERVAL_SEC:
+            return
+        ctx.last_published_at = now
+        for callback in self._publish_callbacks:
+            _call_async(callback, ctx)
 
     @staticmethod
     def _aggregation_key(alert) -> tuple:
