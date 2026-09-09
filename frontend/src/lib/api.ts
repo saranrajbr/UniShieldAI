@@ -29,11 +29,95 @@ export interface Alert {
   evidence?: Record<string, unknown> | null;
   detection_sources?: string[];
   status?: string;
+  pcap_path?: string | null;
+  aggregation?: {
+    source_count?: number;
+    unique_sources?: string[];
+    flow_count?: number;
+    packet_count?: number;
+    window_sec?: number;
+  } | null;
 }
 
 export interface AlertListResponse {
   total: number;
   alerts: Alert[];
+}
+
+export interface CaptureFile {
+  name: string;
+  path: string;
+  size: number;
+  mtime: number;
+}
+
+export interface CapturesResponse {
+  total: number;
+  files: CaptureFile[];
+}
+
+export interface ActiveCapture {
+  path: string;
+  exists: boolean;
+  size: number;
+  mtime: number;
+}
+
+export interface CapturePacketDecode {
+  ip?: {
+    version: number;
+    ihl: number;
+    tos: number;
+    ttl: number;
+    protocol: number;
+    header_len_bytes: number;
+    src: string;
+    dst: string;
+  };
+  tcp?: {
+    src_port: number;
+    dst_port: number;
+    seq: number;
+    ack: number;
+    data_offset: number;
+    flags: string;
+    window: number;
+    checksum: string | null;
+  };
+  udp?: {
+    src_port: number;
+    dst_port: number;
+    length: number;
+    checksum: string | null;
+  };
+  icmp?: {
+    type: number;
+    code: number;
+    checksum: string | null;
+  };
+  payload_len?: number;
+  payload_preview?: string;
+}
+
+export interface CapturePacket {
+  time: number;
+  src: string;
+  dst: string;
+  proto: string;
+  sport: number | null;
+  dport: number | null;
+  len: number;
+  flags: string;
+  summary: string;
+  hex?: string;
+  raw_len?: number;
+  decode?: CapturePacketDecode;
+}
+
+export interface CapturePacketsResponse {
+  total: number;
+  packets: CapturePacket[];
+  error?: string;
 }
 
 export interface TrafficStats {
@@ -154,6 +238,16 @@ export const api = {
   detectionEngines: () => request<DetectionEngines>(`/api/v1/detection/engines`),
   models: () => request<ModelsResponse>(`/api/v1/models`),
   rules: () => request<RulesResponse>(`/api/v1/models/rules`),
+
+  /* traffic captures */
+  captures: () => request<CapturesResponse>(`/api/v1/captures/incidents`),
+  activeCapture: () => request<ActiveCapture>(`/api/v1/captures/active`),
+  capturePackets: (file: string, limit = 200) =>
+    request<CapturePacketsResponse>(
+      `/api/v1/captures/packets?file=${encodeURIComponent(file)}&limit=${limit}`
+    ),
+  captureDownloadUrl: (file: string) =>
+    `${BASE}/api/v1/captures/download?file=${encodeURIComponent(file)}`,
 };
 
 /* ---------------------------- helpers ----------------------------- */
@@ -192,10 +286,19 @@ export function formatNumber(n: number | null | undefined): string {
   return n.toLocaleString("en-US");
 }
 
+/**
+ * Backend timestamps are naive UTC ("2026-09-07T09:17:43.639331"). Normalize
+ * to a UTC instant so age/format are correct in any local timezone.
+ */
+export function parseApiTs(ts: string): Date {
+  if (!ts) return new Date(NaN);
+  if (/[zZ]|[+-]\d{2}:?\d{2}$/.test(ts)) return new Date(ts);
+  return new Date(`${ts}Z`);
+}
+
 export function formatTs(ts: string): string {
-  if (!ts) return "—";
-  const d = new Date(ts);
-  if (Number.isNaN(d.getTime())) return ts;
+  const d = parseApiTs(ts);
+  if (Number.isNaN(d.getTime())) return ts || "—";
   return d.toLocaleTimeString("en-US", {
     hour: "2-digit",
     minute: "2-digit",
@@ -204,13 +307,15 @@ export function formatTs(ts: string): string {
 }
 
 export function timeAgo(ts: string): string {
-  const t = new Date(ts).getTime();
+  const t = parseApiTs(ts).getTime();
   if (Number.isNaN(t)) return "—";
   const s = Math.max(0, Math.floor((Date.now() - t) / 1000));
   if (s < 5) return "just now";
-  if (s < 60) return `${s} sec ago`;
+  if (s < 60) return `${s} seconds ago`;
   const m = Math.floor(s / 60);
   if (m < 60) return `${m} min ago`;
   const h = Math.floor(m / 60);
-  return `${h} hr ago`;
+  if (h < 24) return `${h} hour${h === 1 ? "" : "s"} ago`;
+  const d = Math.floor(h / 24);
+  return `${d} day${d === 1 ? "" : "s"} ago`;
 }

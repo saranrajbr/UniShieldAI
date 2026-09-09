@@ -45,6 +45,7 @@ class Settings(BaseSettings):
 
     max_concurrent_flows: int = 10000
     pipeline_queue_size: int = 50000
+    pipeline_consumers: int = 3
 
     netflow_udp_port: int = 2055
     netflow_udp_host: str = "0.0.0.0"

@@ -19,10 +19,23 @@ THREAT_PRIORITY: dict[ThreatType, int] = {
 class ThreatClassifier:
     def classify(self, risk_score: float, rule_matches: list,
                  ml_result: dict, anomaly_score: float) -> ThreatType:
-        candidates: list[tuple[float, ThreatType]] = []
+        rule_candidates: list[tuple[float, ThreatType]] = [
+            (match.score, match.threat_type) for match in rule_matches
+        ]
 
-        for match in rule_matches:
-            candidates.append((match.score, match.threat_type))
+        # Specific rule matches (port_scan, brute_force, c2, ...) always
+        # out-rank the generic ML/anomaly "threat" label: the supervised model
+        # is binary and can only contribute a broad suspicious_traffic signal,
+        # which would otherwise win by raw score and drown out real TTPs.
+        specific = [
+            (score, tt)
+            for score, tt in rule_candidates
+            if tt != ThreatType.SUSPICIOUS_TRAFFIC
+        ]
+        if specific:
+            return max(specific, key=lambda item: (item[0], self.priority(item[1])))[1]
+
+        candidates: list[tuple[float, ThreatType]] = list(rule_candidates)
 
         supervised_threat = ml_result.get("supervised", {}).get(
             "threat_type", ThreatType.BENIGN.value
@@ -31,7 +44,10 @@ class ThreatClassifier:
         try:
             candidates.append((probability, ThreatType(supervised_threat)))
         except ValueError:
-            pass
+            # Binary model labels are "benign"/"threat" — keep a generic hit as
+            # suspicious_traffic just like anomaly, but it never masks rules.
+            if probability >= 0.5 and supervised_threat != ThreatType.BENIGN.value:
+                candidates.append((probability, ThreatType.SUSPICIOUS_TRAFFIC))
 
         if anomaly_score > 0.6:
             candidates.append((anomaly_score, ThreatType.SUSPICIOUS_TRAFFIC))

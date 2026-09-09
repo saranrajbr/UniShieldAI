@@ -3,6 +3,7 @@ import {
   LayoutGrid,
   ShieldAlert,
   Activity,
+  ScanSearch,
   Cpu,
   Info,
   ChevronsLeft,
@@ -12,9 +13,10 @@ import { Logo } from "../brand/Logo";
 import { useEngine } from "../../store/engine";
 
 const navItems = [
-  { label: "Security Overview", path: "/", icon: LayoutGrid },
+  { label: "SOC Overview", path: "/", icon: LayoutGrid },
   { label: "Alerts", path: "/alerts", icon: ShieldAlert, badge: true },
   { label: "Live Traffic", path: "/traffic", icon: Activity },
+  { label: "Packet Inspector", path: "/packets", icon: ScanSearch },
   { label: "Detection Engine", path: "/engine", icon: Cpu },
   { label: "About · PS", path: "/about", icon: Info },
 ];

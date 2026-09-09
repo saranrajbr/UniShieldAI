@@ -1,4 +1,3 @@
-import asyncio
 from pathlib import Path
 from typing import Any
 
@@ -32,7 +31,7 @@ class EvidenceCollector:
         if target.exists():
             return target
         try:
-            asyncio.get_running_loop().run_in_executor(None, _copy_file, source, target)
+            _copy_file(source, target)
             return target
         except Exception:
             logger.exception("Failed to preserve pcap for alert %s", alert_id)

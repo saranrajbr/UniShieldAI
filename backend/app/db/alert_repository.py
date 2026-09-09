@@ -77,4 +77,7 @@ def _to_schema(record: AlertRecord) -> AlertOut:
         evidence=json.loads(record.evidence or "{}"),
         detection_sources=json.loads(record.detection_sources or "[]"),
         status=record.status,
+        pcap_path=record.pcap_path,
+        aggregation=(json.loads(record.evidence) or {}).get("aggregation")
+        if record.evidence else {},
     )

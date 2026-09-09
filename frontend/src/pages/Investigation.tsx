@@ -1,7 +1,21 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { ArrowLeft, ShieldAlert } from "lucide-react";
-import { api, formatNumber, timeAgo, type Alert } from "../lib/api";
+import {
+  ArrowLeft,
+  Download,
+  Network,
+  ScanSearch,
+  ShieldAlert,
+} from "lucide-react";
+import {
+  api,
+  formatNumber,
+  formatBytes,
+  timeAgo,
+  type Alert,
+  type CapturePacket,
+  type CapturePacketsResponse,
+} from "../lib/api";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card } from "../components/ui/Card";
 import { SeverityBadge } from "../components/alerts/SeverityBadge";
@@ -179,6 +193,38 @@ export default function Investigation() {
               </div>
             </Card>
 
+            {/* Aggregation overview */}
+            {alert.aggregation ? (
+              <Card
+                title="Attack overview"
+                subtitle="How this alert aggregates the flood activity it represents"
+              >
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 text-[11px] uppercase tracking-[0.1em] text-[#64748B]">
+                  <AggStat value={formatNumber(alert.aggregation.source_count)} label="Unique sources" />
+                  <AggStat value={formatNumber(alert.aggregation.flow_count)} label="Flows merged" />
+                  <AggStat value={formatNumber(alert.aggregation.packet_count)} label="Packets seen" />
+                  <AggStat value={`${alert.aggregation.window_sec ?? 0}s`} label="Observation window" />
+                </div>
+                {(alert.aggregation.unique_sources?.length ?? 0) > 0 && (
+                  <div className="mt-4 flex flex-wrap gap-1.5">
+                    {alert.aggregation.unique_sources!.slice(0, 20).map((s) => (
+                      <span
+                        key={s}
+                        className="inline-flex px-2 h-5 rounded-md bg-white/[0.05] border border-white/[0.08] text-[10px] font-mono text-[#94A3B8]"
+                      >
+                        {s}
+                      </span>
+                    ))}
+                    {(alert.aggregation.unique_sources?.length ?? 0) > 20 && (
+                      <span className="inline-flex px-2 h-5 rounded-md bg-white/[0.05] text-[10px] text-[#64748B]">
+                        +{alert.aggregation.unique_sources!.length - 20} more
+                      </span>
+                    )}
+                  </div>
+                )}
+              </Card>
+            ) : null}
+
             {/* Evidence: features */}
             <Card title="Key features" subtitle="Extracted from the contributing flows">
               {Object.keys(features).length === 0 ? (
@@ -228,6 +274,9 @@ export default function Investigation() {
                 </div>
               </Card>
             )}
+
+            {/* Traffic capture */}
+            <CaptureCard alert={alert} />
           </div>
 
           {/* Right column: context + advisory */}
@@ -308,6 +357,129 @@ function DetailRow({ label, value, mono }: { label: string; value: string; mono?
       </span>
     </div>
   );
+}
+
+function AggStat({ value, label }: { value: string; label: string }) {
+  return (
+    <div>
+      <span className="block text-[18px] font-semibold text-white tabular-nums lowercase tracking-normal">
+        {value}
+      </span>
+      {label}
+    </div>
+  );
+}
+
+function CaptureCard({ alert }: { alert: Alert }) {
+  const [packets, setPackets] = useState<CapturePacketsResponse | null>(null);
+  const [loading, setLoading] = useState(false);
+  const file = alert.pcap_path
+    ? alert.pcap_path.replace(/^captures\//, "")
+    : "active/current.pcap";
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      setLoading(true);
+      try {
+        const res = await api.capturePackets(file, 300);
+        if (!cancelled) setPackets(res);
+      } catch {
+        if (!cancelled) setPackets({ total: 0, packets: [] });
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [file]);
+
+  const rows = packets?.packets ?? [];
+  return (
+    <Card
+      title="Traffic capture"
+      subtitle="Packet-level view of the preserved capture (Wireshark-compatible export)"
+      action={
+        <div className="flex items-center gap-2">
+          <Link
+            to={`/packets?file=${encodeURIComponent(file)}&view=incidents`}
+            className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[11px] font-medium text-[#A78BFA] hover:text-white hover:border-[#A78BFA]/40 transition-colors"
+          >
+            Inspect <ScanSearch size={13} strokeWidth={2} />
+          </Link>
+          <a
+            href={api.captureDownloadUrl(file)}
+            download
+            className="inline-flex items-center gap-1.5 px-2.5 h-8 rounded-lg bg-white/[0.04] border border-white/[0.08] text-[11px] font-medium text-[#94A3B8] hover:text-white hover:border-white/[0.16] transition-colors"
+          >
+            <Download size={13} strokeWidth={2} /> PCAP
+          </a>
+        </div>
+      }
+    >
+      {loading ? (
+        <div className="h-24 rounded bg-white/[0.04] animate-pulse" />
+      ) : rows.length === 0 ? (
+        <p className="text-[12px] text-[#64748B]">
+          No packet capture is available for this alert yet. Captures are written
+          as flows stream through the pipeline.
+        </p>
+      ) : (
+        <div className="flex flex-col">
+          <div className="mb-2 text-[11px] text-[#64748B] uppercase tracking-wider">
+            {formatNumber(packets?.total ?? rows.length)} packets · first {rows.length} shown
+          </div>
+          <div className="overflow-x-auto -mx-1">
+            <table className="w-full text-left text-[11px]">
+              <thead>
+                <tr className="text-[10px] uppercase tracking-wider text-[#64748B] border-b border-white/[0.06]">
+                  <th className="py-1.5 pr-3 font-medium">Time</th>
+                  <th className="py-1.5 pr-3 font-medium">Source</th>
+                  <th className="py-1.5 pr-3 font-medium">Destination</th>
+                  <th className="py-1.5 pr-3 font-medium">Proto</th>
+                  <th className="py-1.5 pr-3 font-medium">Ports</th>
+                  <th className="py-1.5 pr-3 font-medium">Len</th>
+                  <th className="py-1.5 pr-3 font-medium">Flags</th>
+                </tr>
+              </thead>
+              <tbody>
+                {rows.map((p: CapturePacket, i: number) => (
+                  <tr key={i} className="border-b border-white/[0.03] text-[#CBD5E1]">
+                    <td className="py-1.5 pr-3 font-mono text-[#94A3B8]">{fmtPktTime(p.time)}</td>
+                    <td className="py-1.5 pr-3 font-mono whitespace-nowrap">{p.src}</td>
+                    <td className="py-1.5 pr-3 font-mono whitespace-nowrap">{p.dst}</td>
+                    <td className="py-1.5 pr-3 uppercase">{p.proto}</td>
+                    <td className="py-1.5 pr-3 font-mono">
+                      {p.sport || p.dport ? `${p.sport ?? "—"}:${p.dport ?? "—"}` : "—"}
+                    </td>
+                    <td className="py-1.5 pr-3 tabular-nums">{formatBytes(p.len)}</td>
+                    <td className="py-1.5 pr-3 font-mono">{p.flags || "—"}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+          <div className="my-2 text-[11px] text-[#94A3B8] flex items-center gap-2">
+            <Network size={13} strokeWidth={2} className="text-[#64748B]" />
+            {rows[0] ? rows[0].summary : ""}
+          </div>
+        </div>
+      )}
+    </Card>
+  );
+}
+
+function fmtPktTime(ts: number): string {
+  if (!ts) return "—";
+  const d = new Date(ts * 1000);
+  const frac = String(Math.floor(ts % 1 * 1000)).padStart(3, "0");
+  return `${d.toLocaleTimeString("en-US", {
+    hour12: false,
+    hour: "2-digit",
+    minute: "2-digit",
+    second: "2-digit",
+  })}.${frac}`;
 }
 
 function recommendations(threatType: string): string[] {

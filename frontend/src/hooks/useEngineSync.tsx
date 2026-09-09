@@ -3,15 +3,18 @@ import { useEngine } from "../store/engine";
 import type { Alert, EngineMetrics, RuntimeMetrics } from "../lib/api";
 
 const POLL_MS = 5000;
+const TICK_MS = 2000;
 
 export function useEngineSync() {
   const refreshAll = useEngine((s) => s.refreshAll);
   const pushAlert = useEngine((s) => s.pushAlert);
+  const pushMetricsSample = useEngine((s) => s.pushMetricsSample);
+  const tick = useEngine((s) => s.tick);
   const setWsConnected = useEngine((s) => s.setWsConnected);
   const setError = useEngine((s) => s.setError);
 
-  const handlers = useRef({ refreshAll, pushAlert, setWsConnected, setError });
-  handlers.current = { refreshAll, pushAlert, setWsConnected, setError };
+  const handlers = useRef({ refreshAll, pushAlert, pushMetricsSample, tick, setWsConnected, setError });
+  handlers.current = { refreshAll, pushAlert, pushMetricsSample, tick, setWsConnected, setError };
 
   useEffect(() => {
     const h = handlers.current;
@@ -21,63 +24,75 @@ export function useEngineSync() {
     const poll = window.setInterval(() => {
       if (!disposed) h.refreshAll();
     }, POLL_MS);
+    const ticker = window.setInterval(() => {
+      if (!disposed) h.tick();
+    }, TICK_MS);
 
     const proto = location.protocol === "https:" ? "wss:" : "ws:";
-    let ws: WebSocket | null = null;
-    let retry = 0;
-    let closed = false;
+    const sockets: WebSocket[] = [];
 
-    const connect = () => {
-      if (closed) return;
-      ws = new WebSocket(`${proto}//${location.host}/ws`);
-      const t = window.setTimeout(() => {
-        if (ws && ws.readyState === WebSocket.CONNECTING) ws.close();
+    const connect = (url: string, onMsg: (msg: unknown) => void, onOpen: () => void) => {
+      const ws = new WebSocket(url);
+      sockets.push(ws);
+      let retry = 0;
+      const failTimeout = window.setTimeout(() => {
+        if (ws.readyState === WebSocket.CONNECTING) ws.close();
       }, 4000);
-
       ws.onopen = () => {
-        h.setWsConnected(true);
+        window.clearTimeout(failTimeout);
+        onOpen();
         retry = 0;
       };
       ws.onmessage = (ev) => {
         try {
-          const msg = JSON.parse(String(ev.data));
-          if (msg && typeof msg === "object") {
-            if (msg.alert_id) {
-              h.pushAlert(msg as Alert);
-            } else if (msg.type === "metrics") {
-              const m = msg.data as RuntimeMetrics;
-              if (typeof m?.flow_rate_fps === "number") {
-                useEngine.setState({
-                  metrics: m,
-                  lastUpdated: Date.now(),
-                });
-              }
-            } else if (msg.type === "engine_state") {
-              useEngine.setState({ engine: msg.data as EngineMetrics });
-            }
-          }
+          onMsg(JSON.parse(String(ev.data)));
         } catch {
           /* ignore malformed frames */
         }
       };
       ws.onclose = () => {
-        clearTimeout(t);
-        h.setWsConnected(false);
+        window.clearTimeout(failTimeout);
+        if (disposed || ws.readyState !== WebSocket.CLOSED) return;
         const delay = Math.min(15000, 1000 * 2 ** retry);
         retry += 1;
-        if (!closed) window.setTimeout(connect, delay);
+        window.setTimeout(() => {
+          if (!disposed) connect(url, onMsg, onOpen);
+        }, delay);
       };
-      ws.onerror = () => {
-        if (ws) ws.close();
-      };
+      ws.onerror = () => ws.close();
     };
-    connect();
+
+    // Channel 1: /ws — system metrics + engine state envelopes.
+    connect(
+      `${proto}//${location.host}/ws`,
+      (msg) => {
+        const m = msg as { type?: string; data?: RuntimeMetrics };
+        if (m?.type === "metrics" && typeof m.data?.flow_rate_fps === "number") {
+          h.pushMetricsSample(m.data, 0);
+        } else if (m?.type === "engine_state") {
+          useEngine.setState({ engine: m.data as unknown as EngineMetrics });
+        }
+      },
+      () => h.setWsConnected(true)
+    );
+
+    // Channel 2: /ws/alerts — bare alert payloads broadcast on new detections.
+    connect(
+      `${proto}//${location.host}/ws/alerts`,
+      (msg) => {
+        const a = msg as Alert;
+        if (a && typeof a === "object" && a.alert_id) {
+          h.pushAlert(a, "ws");
+        }
+      },
+      () => undefined
+    );
 
     return () => {
-      closed = true;
       disposed = true;
       window.clearInterval(poll);
-      if (ws) ws.close();
+      window.clearInterval(ticker);
+      sockets.forEach((ws) => ws.close());
     };
   }, []);
 }

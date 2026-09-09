@@ -73,7 +73,8 @@ class FeatureExtractor:
         size_ratio = _safe_divide(entry.byte_count, entry.packet_count)
         between = connection_tracker.connections_between(entry.src_ip, entry.dst_ip)
         dst_ports = {c.dst_port for c in between if c.dst_port is not None}
-        dst_ips = {c.dst_ip for c in between}
+        src_conns = connection_tracker.connections_for_src(entry.src_ip)
+        dst_ips = {c.dst_ip for c in src_conns}
         features = FlowFeatures(
             flow_id=entry.flow_id,
             src_ip=entry.src_ip,
@@ -92,7 +93,7 @@ class FeatureExtractor:
             connection_frequency=_connection_frequency(entry.src_ip, duration),
             unique_dst_ports=len(dst_ports),
             unique_dst_ips=max(1, len(dst_ips)),
-            outbound_inbound_ratio=_outbound_inbound_ratio(entry.src_ip.startswith("10.0") and "outbound" or "inbound"),
+            outbound_inbound_ratio=_outbound_inbound_ratio(entry.src_ip, entry.byte_count, duration),
             dns_entropy=_dns_entropy_record(entry, dns_query),
             inter_arrival_time_mean=_inter_arrival_from_ts(entry.timestamps),
             inter_arrival_time_std=_inter_arrival_std_from_ts(entry.timestamps),
@@ -101,6 +102,7 @@ class FeatureExtractor:
             avg_packet_size=size_ratio,
             source_entropy=_source_entropy(entry.dst_ip),
             udp_amp_ratio=_udp_amp_ratio(entry),
+            small_packet_ratio=_small_packet_ratio_src(entry),
         )
         self._features = features
         return features
@@ -109,12 +111,36 @@ class FeatureExtractor:
         return self._features
 
 
-def _outbound_inbound_ratio(direction: str) -> float:
-    if direction == "outbound":
-        return 1.0
-    if direction == "inbound":
-        return 0.0
-    return 0.5
+def _is_internal(ip: str | None) -> bool:
+    if not ip:
+        return False
+    return (
+        ip.startswith("10.")
+        or ip.startswith("192.168.")
+        or (len(ip) >= 7 and ip[:7] == "172.16." and ip.split(".")[1].isdigit() and 16 <= int(ip.split(".")[1]) <= 31)
+    )
+
+
+def _outbound_inbound_ratio(src_ip: str, byte_count: int, duration: float) -> float:
+    """Byte-weighted egress/ingress ratio for this host.
+
+    Previously a hardcoded 1.0/0.0/0.5 ternary, which made the
+    data-exfiltration (>=10) and lateral-movement (0<..<0.3) rules
+    unreachable. Now uses the connection byte counters: bytes sent by the
+    host toward external destinations vs bytes received from external
+    sources. Falls back to a direction hint when no history exists yet.
+    """
+    outbound = float(byte_count) if (_is_internal(src_ip) and not duration) else 0.0
+    conns = connection_tracker.connections_for_src(src_ip)
+    inbound = 0.0
+    if conns:
+        for c in conns:
+            if not _is_internal(c.dst_ip):
+                outbound += float(c.byte_count)
+        for c in connection_tracker.connections_for_dst(src_ip):
+            if not _is_internal(c.src_ip):
+                inbound += float(c.byte_count)
+    return _safe_divide(outbound, max(1.0, inbound))
 
 
 _CONN_FREQ_WINDOW_SEC = 60.0
@@ -142,6 +168,28 @@ def _small_packet_ratio(conn) -> float:
         return 0.0
     small = sum(1 for e in conn.events if e.get("size", 0) < 64)
     return _safe_divide(small, len(conn.events))
+
+
+def _small_packet_ratio_src(entry: FlowEntry) -> float:
+    """Fraction of connections from this host that are tiny (recon probes).
+
+    Small SYN-only or zero-payload probes (~40-64 B) indicate port/enumeration
+    scanning. Per-source accumulative: the more tiny connections this host
+    makes relative to its total, the more it looks like a scanner.
+    """
+    conns = connection_tracker.connections_for_src(entry.src_ip)
+    if not conns:
+        return 0.0
+    small = 0
+    total = 0
+    for c in conns:
+        if not c.packet_count or c.byte_count <= 0:
+            continue
+        avg = c.byte_count / float(c.packet_count)
+        total += 1
+        if avg < 64.0:
+            small += 1
+    return _safe_divide(small, total)
 
 
 def _inter_arrival(conn) -> float:

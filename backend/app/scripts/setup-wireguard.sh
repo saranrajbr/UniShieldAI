@@ -68,7 +68,7 @@ client() {
   [ $# -ge 3 ] || { echo "usage: $0 client NAME SERVER_ENDPOINT[ :port]"; exit 1; }
   need wg
   local name="$1" endpoint="$2" ip="${3:-172.16.250.2}"
-  local k; k=$(gen_keys); local priv="${k%%|*}" pub="${k##|*}"
+  local k; k=$(gen_keys); local priv="${k%%|*}" pub="${k##*|}"
   echo "CLIENT '$name' public key: $pub   (give this to Laptop 1 server)"
   echo "Server public key: (paste the SERVER's public key into the next line)"
   read -r -p "ServerPublicKey> " srvpub

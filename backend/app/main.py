@@ -6,8 +6,9 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.core.config import settings
 from app.core.logging import get_logger, setup_logging
+from app.capture.flow_pcap import flow_pcap_recorder
 from app.db.database import init_db
-from app.db.persist import persist_alert, persist_metrics_snapshot
+from app.db.persist import persist_metrics_snapshot, persist_worker
 from app.engine.pipeline import pipeline
 from app.ml.engine import boot_ml_engine
 from app.ml.model_registry import model_registry
@@ -18,6 +19,7 @@ from app.utils.metrics import runtime_metrics
 
 from app.api import (
     alerts,
+    captures,
     detection,
     health,
     metrics,
@@ -42,7 +44,7 @@ async def _wire_publishers() -> None:
     event_publisher.register_stream("metrics", _metrics_producer)
     event_publisher.register_stream("engine_state", _engine_producer)
     pipeline.alert_manager.register_publisher(lambda ctx: _publish_alert(ctx))
-    pipeline.alert_manager.register_persister(lambda ctx: persist_alert(ctx))
+    pipeline.alert_manager.register_persister(lambda ctx: persist_worker.submit(ctx))
 
 
 def _metrics_producer() -> dict:
@@ -61,7 +63,9 @@ def _engine_producer() -> dict:
 async def lifespan(app: FastAPI):
     logger.info("Starting %s v%s", settings.app_name, settings.app_version)
     await init_db()
-    await pipeline.start()
+    flow_pcap_recorder.start()
+    await pipeline.start(workers=settings.pipeline_consumers)
+    await persist_worker.start()
     await expiry_manager.start()
     await event_publisher.start()
     await _wire_publishers()
@@ -85,7 +89,9 @@ async def lifespan(app: FastAPI):
     await flow_export_listener.stop()
     await event_publisher.stop()
     await expiry_manager.stop()
+    await persist_worker.stop()
     await pipeline.stop()
+    flow_pcap_recorder.stop()
     logger.info("%s stopped", settings.app_name)
 
 
@@ -112,6 +118,7 @@ app.add_middleware(
 app.include_router(health.router)
 app.include_router(traffic.router)
 app.include_router(alerts.router)
+app.include_router(captures.router)
 app.include_router(detection.router)
 app.include_router(metrics.router)
 app.include_router(models.router)

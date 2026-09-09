@@ -34,6 +34,8 @@ class AlertOut(BaseModel):
     evidence: dict
     detection_sources: list[str]
     status: str = "open"
+    pcap_path: str | None = None
+    aggregation: dict = Field(default_factory=dict)
 
 
 class AlertList(BaseModel):

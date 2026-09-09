@@ -28,6 +28,7 @@ class AlertEvent(EventBase):
                 "detection_sources": alert.alert.detection_sources,
                 "evidence": alert.alert.evidence,
                 "pcap_path": alert.pcap_path,
+                "aggregation": alert.alert.evidence.get("aggregation", {}),
             },
         )
 

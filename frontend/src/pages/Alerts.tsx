@@ -6,7 +6,7 @@ import { PageHeader } from "../components/layout/PageHeader";
 import { Card } from "../components/ui/Card";
 import { SeverityBadge } from "../components/alerts/SeverityBadge";
 import { ThreatBadge } from "../components/alerts/ThreatBadge";
-import { FlowPair } from "../components/alerts/AlertRow";
+import { FlowPair, StatusChip } from "../components/alerts/AlertRow";
 import { EmptyState, SearchEmptyState } from "../components/alerts/EmptyState";
 import { severityMeta } from "../lib/threats";
 import { humanThreatType, timeAgo, type Alert } from "../lib/api";
@@ -32,10 +32,17 @@ const TABS: { id: StatusTab; label: string }[] = [
 export default function Alerts() {
   const alerts = useEngine((s) => s.alerts);
   const gotData = useEngine((s) => s.gotData);
+  const sources = useEngine((s) => s.sources);
   const [query, setQuery] = useState("");
   const [severity, setSeverity] = useState("all");
   const [threat, setThreat] = useState("all");
   const [tab, setTab] = useState<StatusTab>("all");
+
+  const liveBySrc = useMemo(() => {
+    const m = new Map<string, boolean>();
+    sources.forEach((s) => s.active && m.set(s.ip, true));
+    return m;
+  }, [sources]);
 
   const threatTypes = useMemo(
     () => [...new Set(alerts.map((a) => a.threat_type))].sort(),
@@ -144,7 +151,8 @@ export default function Alerts() {
               <span className="w-[84px] shrink-0">Severity</span>
               <span className="flex-1">Threat</span>
               <span className="hidden xl:inline-flex flex-1">Source → Destination</span>
-              <span className="hidden sm:inline w-[110px]">Evidence</span>
+              <span className="hidden sm:inline-flex w-[110px]">Evidence</span>
+              <span className="hidden md:block w-[76px]">State</span>
               <span className="w-[92px] text-right">Detected</span>
             </div>
             {filtered.slice(0, 120).map((a) => (
@@ -182,6 +190,9 @@ export default function Alerts() {
                       {s.replace(/_/g, " ")}
                     </span>
                   ))}
+                </span>
+                <span className="hidden md:flex w-[76px] shrink-0 justify-start">
+                  <StatusChip live={liveBySrc.has(a.src_ip)} />
                 </span>
                 <span className="w-[92px] text-right text-[11px] text-[#64748B] tabular-nums whitespace-nowrap shrink-0">
                   {timeAgo(a.timestamp)}

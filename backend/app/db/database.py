@@ -8,7 +8,18 @@ class Base(DeclarativeBase):
     pass
 
 
-engine = create_async_engine(settings.database_url, echo=settings.db_echo, pool_pre_ping=True)
+engine = create_async_engine(
+    settings.database_url,
+    echo=settings.db_echo,
+    pool_pre_ping=True,
+    # Reads (alerts GET) share the pool with the serialized persist worker and
+    # the metrics snapshot. A bigger pool plus a generous checkout timeout keeps
+    # the SOC API responsive during flood-induced write bursts.
+    pool_size=10,
+    max_overflow=30,
+    pool_timeout=30,
+    connect_args={"timeout": 30},
+)
 
 SessionLocal = async_sessionmaker(engine, class_=AsyncSession, expire_on_commit=False)
 

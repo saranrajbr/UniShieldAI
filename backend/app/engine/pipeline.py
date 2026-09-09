@@ -1,6 +1,7 @@
 import asyncio
 
 from app.alerts.manager import AlertManager
+from app.capture.flow_pcap import flow_pcap_recorder
 from app.core.config import settings
 from app.core.logging import get_logger
 from app.decision.engine import DecisionEngine, decision_engine
@@ -37,20 +38,22 @@ class DetectionPipeline:
         self.extractor = FeatureExtractor()
         self._queue: asyncio.Queue | None = None
         self._worker: asyncio.Task | None = None
+        self._workers: list[asyncio.Task] = []
 
-    async def start(self) -> None:
+    async def start(self, workers: int = 1) -> None:
         self._queue = asyncio.Queue(maxsize=settings.pipeline_queue_size)
-        self._worker = asyncio.create_task(self._consume(), name="pipeline-consumer")
-        logger.info("Detection pipeline started")
+        self._workers = [
+            asyncio.create_task(self._consume(), name=f"pipeline-consumer-{i}")
+            for i in range(workers)
+        ]
+        self._worker = self._workers[0]
+        logger.info("Detection pipeline started (%d consumers)", workers)
 
     async def stop(self) -> None:
-        if self._worker:
-            self._worker.cancel()
-            try:
-                await self._worker
-            except asyncio.CancelledError:
-                pass
-            self._worker = None
+        for w in self._workers:
+            w.cancel()
+        self._workers = []
+        self._worker = None
 
     async def submit(self, record: FlowRecord) -> str | None:
         if self._queue is None:
@@ -91,6 +94,12 @@ class DetectionPipeline:
         runtime_metrics.record_flow()
         record_flow()
         record_packet(record.byte_count)
+        flow_pcap_recorder.record(
+            record.src_ip, record.dst_ip, record.protocol,
+            record.src_port, record.dst_port, record.byte_count,
+            syn=record.syn_count, ack=record.ack_count,
+            rst=record.rst_count, fin=record.fin_count,
+        )
 
         entry = self.flow_state.get_or_create(
             flow_id,

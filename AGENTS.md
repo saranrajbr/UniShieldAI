@@ -41,10 +41,17 @@ pydantic, aiosqlite, pytest, pytest-asyncio, httpx).
 ## Key architecture facts
 
 - Frontend pages are wired to the backend through `src/lib/api.ts` (typed
-  client) + `src/store/engine.ts` (zustand `useEngine` store + `gotData`
-  flag, `error` set when every poll endpoint fails) and a sync hook in
-  `src/hooks/useEngineSync.tsx` (5s polling + `/ws` `/ws/alerts` with
-  reconnect, mounted in `AppFrame`).
+  client) + `src/store/engine.ts` (zustand `useEngine` store: `gotData` flag,
+  `error` set when every poll endpoint fails, plus **real-time toasts** and
+  per-source **ACTIVE/STOPPED attack tracking** fed by `/ws/alerts`) and a sync
+  hook in `src/hooks/useEngineSync.tsx` (5s polling + `/ws` for metrics +
+  `/ws/alerts` for bare alert broadcasts, 2s source-activity tick, reconnect,
+  mounted in `AppFrame`). New detections raise a slide-in toast popup
+  (click → investigation) and a separate "Attack ended" toast fires ~20s after
+  a source stops sending. Backend timestamps are naive UTC — `parseApiTs` in
+  `api.ts` appends `Z` so `timeAgo`/`formatTs` show real ages (`4h` bug was
+  naive timestamps parsed as local). The Overview trend keeps 24 × 5s samples
+  (≈2 min) so the chart never gaps like the old 5-minute window.
 - Routes (6, `createBrowserRouter`): `/` Overview, `/alerts`, `/traffic`,
   `/engine`, `/about`, `/investigation/:id`. Sidebar lists these 5 pages
   (alerts item carries a live open-count badge) plus a collapse toggle.
@@ -123,6 +130,11 @@ pydantic, aiosqlite, pytest, pytest-asyncio, httpx).
   (`dns_qname`, `tls_ja3`); the numeric ML vector is fixed at
   `FEATURE_COLUMNS` (20) — new features go through rules/evidence, not the
   vector.
-- WireGuard: Laptop 1 server `/etc/wireguard/wg0.conf` (peer `172.16.250.2`,
-  sensor pubkey `iBmi9fLMpkc/pUKEbJJbR5ALZrCmdifneF4YH19sYDc=`); endpoints are
-  `171.79.60.36:51820` (public) / `10.21.21.131:51820` (LAN).
+- WireGuard: Laptop 1 server `/etc/wireguard/wg0.conf` (tunnel net
+  `172.16.250.0/24`, server `172.16.250.1`, server pubkey
+  `D2xtJpoZVuM8unhjrgFXu5NBh1eNtfpgiCvuX0CIYwo=`); Laptop 2 Windows client
+  pubkey `gGC6ZZAajuFyhLrP/3VAKuFysu7C4QNcULYuGxPHwzw=` (peer `.2`, importable
+  config `docs/wireguard/laptop2-windows.conf`). Endpoints `171.79.55.84:51820`
+  (public, dynamic) / `10.21.21.131:51820` (LAN). After a machine reset
+  regenerate with `backend/app/scripts/setup-wireguard.sh server` + a fresh
+  client keypair; demo steps in `docs/Presentation-Steps.md`.

@@ -30,6 +30,7 @@ export function TopBar({ expanded, badge }: { expanded: boolean; badge?: ReactNo
   const metrics = useEngine((s) => s.metrics);
   const stats = useEngine((s) => s.stats);
   const alerts = useEngine((s) => s.alerts);
+  const sources = useEngine((s) => s.sources);
   const refreshAll = useEngine((s) => s.refreshAll);
   const gotData = useEngine((s) => s.gotData);
 
@@ -37,6 +38,7 @@ export function TopBar({ expanded, badge }: { expanded: boolean; badge?: ReactNo
     (a) => a.status !== "resolved" && a.status !== "ignored"
   ).length;
   const critical = alerts.filter((a) => a.severity === "critical").length;
+  const activeAttacks = sources.filter((s) => s.active && s.alertCount > 0).length;
 
   return (
     <header
@@ -91,6 +93,23 @@ export function TopBar({ expanded, badge }: { expanded: boolean; badge?: ReactNo
           value={metrics ? `${formatNumber(metrics.alerts_raised)}` : "—"}
           accent="#7C86A3"
         />
+        <div
+          className="hidden lg:flex items-center gap-1.5 px-2.5 ml-1 h-7 rounded-full border font-medium"
+          style={
+            activeAttacks > 0
+              ? { color: "#FF8CA0", borderColor: "rgba(255,77,106,0.35)", background: "rgba(255,77,106,0.08)" }
+              : { color: "#64748B", borderColor: "rgba(255,255,255,0.08)", background: "rgba(255,255,255,0.03)" }
+          }
+          title={`${activeAttacks} attack source${activeAttacks === 1 ? "" : "s"} sending traffic right now`}
+        >
+          <span
+            className={`w-1.5 h-1.5 rounded-full ${activeAttacks > 0 ? "bg-[#FF4D6A] live-source" : "bg-[#334155]"}`}
+          />
+          <span className="text-[11px] font-semibold tabular-nums">{activeAttacks}</span>
+          <span className="text-[10px] uppercase tracking-wider opacity-70">
+            active attacks
+          </span>
+        </div>
         <div
           className={cn(
             "flex items-center gap-1.5 pl-3 ml-1",

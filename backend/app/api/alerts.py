@@ -75,4 +75,6 @@ def _ctx_to_schema(ctx) -> AlertOut:
         risk_score=ctx.alert.risk_score,
         evidence=ctx.alert.evidence,
         detection_sources=ctx.alert.detection_sources,
+        pcap_path=ctx.pcap_path,
+        aggregation=ctx.alert.evidence.get("aggregation", {}),
     )
