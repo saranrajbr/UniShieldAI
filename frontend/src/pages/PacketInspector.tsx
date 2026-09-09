@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { FileSearch, RefreshCw, ChevronRight } from "lucide-react";
+import { FileSearch, RefreshCw, ChevronRight, Search, ChevronLeft, Inbox } from "lucide-react";
 import { PageHeader } from "../components/layout/PageHeader";
 import { Card } from "../components/ui/Card";
 import { EmptyState } from "../components/alerts/EmptyState";
@@ -14,6 +14,10 @@ import {
 } from "../lib/api";
 
 type View = "active" | "incidents";
+type ProtoFilter = "all" | "tcp" | "udp" | "icmp";
+
+const ACTIVE_FILE = "active/current.pcap";
+const PAGE_SIZES = [100, 200, 500, 1000];
 
 export default function PacketInspector() {
   const [searchParams] = useSearchParams();
@@ -22,12 +26,15 @@ export default function PacketInspector() {
   const [view, setView] = useState<View>(initialView);
   const [active, setActive] = useState<ActiveCapture | null>(null);
   const [incidents, setIncidents] = useState<CaptureFile[]>([]);
-  const [file, setFile] = useState<string>(initialFile ?? "active/current.pcap");
+  const [file, setFile] = useState<string>(initialFile ?? ACTIVE_FILE);
   const [limit, setLimit] = useState(200);
+  const [page, setPage] = useState(0);
   const [data, setData] = useState<CapturePacketsResponse | null>(null);
-  const [selected, setSelected] = useState<number | null>(null);
+  const [selected, setSelected] = useState<number>(0);
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [q, setQ] = useState("");
+  const [protoFilter, setProtoFilter] = useState<ProtoFilter>("all");
 
   const refreshFiles = useCallback(async () => {
     try {
@@ -46,45 +53,79 @@ export default function PacketInspector() {
   }, [refreshFiles]);
 
   const loadPackets = useCallback(
-    async (target: string) => {
+    async (target: string, pageNo: number, size: number) => {
       setBusy(true);
       setError(null);
       try {
-        const res = await api.capturePackets(target, limit);
+        const res = await api.capturePackets(target, size, pageNo * size);
         setData(res);
+        setSelected(0);
       } catch (e) {
         setError(e instanceof Error ? e.message : "Failed to load packets");
         setData(null);
       } finally {
         setBusy(false);
-        setSelected(null);
       }
     },
-    [limit]
+    []
   );
 
   useEffect(() => {
-    loadPackets(file);
-  }, [file, loadPackets]);
+    loadPackets(file, page, limit);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [file, page, limit]);
 
   const pickFile = (name: string) => {
+    setSelected(0);
+    setPage(0);
+    setQ("");
+    setProtoFilter("all");
     setFile(name);
   };
 
-  const packet = selected != null ? data?.packets[selected] : null;
+  const totalPages = data ? Math.max(1, Math.ceil(data.total / limit)) : 1;
+  const canPrev = page > 0;
+  const canNext = data ? page + 1 < totalPages : false;
+
+  const protosInPage = useMemo(() => {
+    const s = new Set<string>();
+    (data?.packets ?? []).forEach((p) => s.add(p.proto));
+    return s;
+  }, [data]);
+
+  const filtered = useMemo(() => {
+    const query = q.trim().toLowerCase();
+    return (data?.packets ?? [])
+      .map((pkt, idx) => ({ idx, pkt }))
+      .filter(({ pkt }) => {
+        if (protoFilter !== "all" && pkt.proto !== protoFilter) return false;
+        if (!query) return true;
+        return (
+          pkt.src.toLowerCase().includes(query) ||
+          pkt.dst.toLowerCase().includes(query) ||
+          `${pkt.src}:${pkt.sport ?? ""}`.toLowerCase().includes(query) ||
+          `${pkt.dst}:${pkt.dport ?? ""}`.toLowerCase().includes(query) ||
+          (pkt.summary ?? "").toLowerCase().includes(query) ||
+          pkt.flags.toLowerCase().includes(query)
+        );
+      });
+  }, [data, q, protoFilter]);
+
+  const packet = data && selected != null ? data.packets[selected] ?? null : null;
+
+  const showOffset = data ? data.offset : 0;
 
   return (
-    <div className="p-5 md:p-6 max-w-[1400px] mx-auto">
+    <div className="p-5 md:p-6 max-w-[1500px] mx-auto">
       <PageHeader
         title="Packet Inspector"
-        subtitle="Wireshark-style view of captured evidence — select packets to inspect the frame decode"
+        subtitle="Wireshark-style evidence viewer — page through a capture, filter, and click any packet to inspect its frame decode"
         actions={
           <button
             type="button"
-            onClick={() => {
-              loadPackets(file);
-            }}
-            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium text-[#CBD5E1] bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.1] transition-colors"
+            onClick={() => loadPackets(file, page, limit)}
+            disabled={busy}
+            className="inline-flex items-center gap-1.5 h-8 px-3 rounded-lg text-[12px] font-medium text-[#CBD5E1] bg-white/[0.05] border border-white/[0.08] hover:bg-white/[0.1] disabled:opacity-50 transition-colors"
           >
             <RefreshCw size={13} className={cn(busy && "animate-spin")} />
             Refresh
@@ -92,12 +133,12 @@ export default function PacketInspector() {
         }
       />
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        {/* Capture source picker */}
+      <div className="grid grid-cols-1 xl:grid-cols-[300px_minmax(0,1fr)] gap-4 items-start">
+        {/* Source picker + filters */}
         <Card
           title="Capture source"
-          subtitle="Active live buffer or archived incident evidence"
-          className="lg:col-span-1 self-start"
+          subtitle="Live buffer or archived incident evidence"
+          className="xl:sticky xl:top-4"
         >
           <div className="flex flex-col gap-4">
             <div className="flex gap-1 rounded-lg p-0.5 bg-white/[0.04] border border-white/[0.07]">
@@ -121,16 +162,16 @@ export default function PacketInspector() {
             {view === "active" ? (
               <button
                 type="button"
-                onClick={() => pickFile("active/current.pcap")}
+                onClick={() => pickFile(ACTIVE_FILE)}
                 className={cn(
                   "flex items-center gap-3 rounded-xl border p-3 text-left transition-colors",
-                  file === "active/current.pcap"
+                  file === ACTIVE_FILE
                     ? "border-[#A78BFA]/40 bg-[#A78BFA]/[0.06]"
                     : "border-white/[0.07] hover:border-white/[0.14]"
                 )}
               >
                 <span className="w-2 h-2 rounded-full bg-[#6BCB77] live-source shrink-0" />
-                <span className="min-w-0">
+                <span className="min-w-0 flex-1">
                   <span className="block text-[12.5px] font-semibold text-[#CBD5E1]">
                     current.pcap
                   </span>
@@ -140,24 +181,25 @@ export default function PacketInspector() {
                       : "not writing yet"}
                   </span>
                 </span>
-                <span className="ml-auto text-[10px] uppercase tracking-wider text-[#6BCB77]">
+                <span className="text-[10px] uppercase tracking-wider text-[#6BCB77]">
                   live
                 </span>
               </button>
             ) : (
-              <div className="flex flex-col gap-1.5 max-h-[420px] overflow-y-auto pr-1">
+              <div className="flex flex-col gap-1.5 max-h-[300px] overflow-y-auto pr-1">
                 {incidents.length === 0 ? (
                   <p className="text-[12px] text-[#64748B] py-3 text-center">
                     No preserved incident captures yet.
                   </p>
                 ) : (
                   incidents.map((f) => {
-                    const isSel = file === f.path.replace(/^captures\//, "");
+                    const rel = f.path.replace(/^captures\//, "");
+                    const isSel = file === rel;
                     return (
                       <button
                         key={f.path}
                         type="button"
-                        onClick={() => pickFile(f.path.replace(/^captures\//, ""))}
+                        onClick={() => pickFile(rel)}
                         className={cn(
                           "flex items-center gap-2 rounded-lg border px-2.5 py-2 text-left transition-colors",
                           isSel
@@ -166,7 +208,7 @@ export default function PacketInspector() {
                         )}
                       >
                         <FileSearch size={14} className="shrink-0 text-[#64748B]" />
-                        <span className="min-w-0">
+                        <span className="min-w-0 flex-1">
                           <span className="block text-[11.5px] font-medium text-[#CBD5E1] truncate font-mono">
                             {f.name}
                           </span>
@@ -181,97 +223,204 @@ export default function PacketInspector() {
               </div>
             )}
 
+            {/* Filters */}
+            <div className="border-t border-white/[0.06] pt-3 flex flex-col gap-2.5">
+              <p className="text-[10px] uppercase tracking-[0.14em] text-[#475569]">
+                Filter this page
+              </p>
+              <div className="flex items-center gap-2 h-9 px-3 rounded-lg bg-white/[0.03] border border-white/[0.08] focus-within:border-[#7C5CFC]/50 transition-colors">
+                <Search size={13} className="text-[#64748B] shrink-0" strokeWidth={2} />
+                <input
+                  value={q}
+                  onChange={(e) => setQ(e.target.value)}
+                  placeholder="IP, port, flags, info…"
+                  className="bg-transparent border-none outline-none text-[12.5px] text-white placeholder:text-[#475569] flex-1 min-w-0"
+                  aria-label="Filter packets"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {(["all", "tcp", "udp", "icmp"] as ProtoFilter[]).map((p) => (
+                  <button
+                    key={p}
+                    type="button"
+                    onClick={() => setProtoFilter(p)}
+                    className={cn(
+                      "px-2.5 h-7 rounded-md text-[11px] font-semibold uppercase tracking-wider transition-colors",
+                      protoFilter === p
+                        ? "bg-white/[0.1] text-white border border-white/[0.14]"
+                        : "text-[#64748B] hover:text-[#CBD5E1] border border-white/[0.06]",
+                      p !== "all" && !protosInPage.has(p) && "opacity-40"
+                    )}
+                  >
+                    {p === "all" ? "All" : p}
+                  </button>
+                ))}
+              </div>
+              {(q || protoFilter !== "all") && filtered.length >= 0 && (
+                <div className="flex items-center justify-between text-[11px] text-[#64748B]">
+                  <span>
+                    {filtered.length} of {data?.packets.length ?? 0} shown
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setQ("");
+                      setProtoFilter("all");
+                    }}
+                    className="text-[#A78BFA] hover:text-[#C4B5FD] font-medium"
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
+
+            {/* Paging */}
             <div className="flex items-center justify-between pt-1 border-t border-white/[0.06]">
-              <label className="text-[11.5px] text-[#64748B]">
-                Rows{" "}
+              <label className="text-[11.5px] text-[#64748B] flex items-center gap-1">
+                Rows
                 <select
                   value={limit}
-                  onChange={(e) => setLimit(Number(e.target.value))}
+                  onChange={(e) => {
+                    const n = Number(e.target.value);
+                    setLimit(n);
+                    setPage(0);
+                  }}
                   className="ml-1 bg-[#12141F] border border-white/[0.1] rounded-md text-[11.5px] px-1.5 py-0.5 text-[#CBD5E1]"
                 >
-                  {[100, 200, 500, 1000].map((n) => (
+                  {PAGE_SIZES.map((n) => (
                     <option key={n} value={n}>
                       {n}
                     </option>
                   ))}
                 </select>
               </label>
-              <span className="text-[11px] text-[#64748B] tabular-nums">
-                {data ? `${data.packets.length}/${data.total}` : "—"}
+            </div>
+            <div className="flex items-center justify-between gap-2">
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.max(0, p - 1))}
+                disabled={!canPrev || busy}
+                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-[11.5px] font-medium text-[#94A3B8] bg-white/[0.03] border border-white/[0.07] hover:text-white disabled:opacity-40 transition-colors"
+              >
+                <ChevronLeft size={14} /> Prev
+              </button>
+              <span className="text-[11px] text-[#64748B] tabular-nums whitespace-nowrap">
+                {data ? `page ${page + 1} / ${totalPages}` : "—"}
               </span>
+              <button
+                type="button"
+                onClick={() => setPage((p) => Math.min(totalPages - 1, p + 1))}
+                disabled={!canNext || busy}
+                className="inline-flex items-center gap-1 h-8 px-2.5 rounded-lg text-[11.5px] font-medium text-[#94A3B8] bg-white/[0.03] border border-white/[0.07] hover:text-white disabled:opacity-40 transition-colors"
+              >
+                Next <ChevronRight size={14} />
+              </button>
             </div>
           </div>
         </Card>
 
-        {/* Packet list */}
-        <Card
-          title="Packets"
-          subtitle={packet?.summary ?? "Click a packet to inspect its decode"}
-          className="lg:col-span-2"
-        >
-          {error ? (
-            <div className="py-8">
-              <EmptyState title="Capture unavailable" hint={error} />
-            </div>
-          ) : !data || data.packets.length === 0 ? (
-            <div className="py-8">
-              <EmptyState
-                title={busy ? "Reading capture…" : "No packets in view"}
-                hint="Choose a capture source on the left, or wait for traffic to be recorded."
-              />
-            </div>
-          ) : (
-            <div className="overflow-x-auto -mx-5 -mb-5">
-              <table className="w-full text-left border-collapse">
-                <thead>
-                  <tr className="text-[10px] uppercase tracking-[0.12em] text-[#475569]">
-                    <th className="px-4 py-2 font-semibold">#</th>
-                    <th className="px-2 py-2 font-semibold">Time</th>
-                    <th className="px-2 py-2 font-semibold">Source</th>
-                    <th className="px-2 py-2 font-semibold">Destination</th>
-                    <th className="px-2 py-2 font-semibold">Proto</th>
-                    <th className="px-2 py-2 font-semibold">Len</th>
-                    <th className="px-2 py-2 font-semibold">Flags</th>
-                    <th className="px-2 py-2 font-semibold">Info</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {data.packets.map((p, i) => (
-                    <tr
-                      key={i}
-                      onClick={() => setSelected(selected === i ? null : i)}
-                      className={cn(
-                        "text-[12px] border-t border-white/[0.04] cursor-pointer hover:bg-white/[0.03] transition-colors",
-                        selected === i && "bg-[#A78BFA]/[0.08]"
-                      )}
-                    >
-                      <td className="px-4 py-1.5 text-[#475569] tabular-nums">{i + 1}</td>
-                      <td className="px-2 py-1.5 text-[#94A3B8] tabular-nums whitespace-nowrap">
-                        {fmtPktTime(p)}
-                      </td>
-                      <td className="px-2 py-1.5 font-mono text-[#CBD5E1] whitespace-nowrap">{p.src}</td>
-                      <td className="px-2 py-1.5 font-mono text-[#CBD5E1] whitespace-nowrap">{p.dst}</td>
-                      <td className="px-2 py-1.5">
-                        <ProtoPill proto={p.proto} />
-                      </td>
-                      <td className="px-2 py-1.5 text-[#94A3B8] tabular-nums">{p.len}</td>
-                      <td className="px-2 py-1.5 font-mono text-[#64748B]">{p.flags || "·"}</td>
-                      <td className="px-2 py-1.5 text-[#64748B] truncate max-w-[220px]">{p.summary}</td>
+        {/* Right column: packet list + frame details */}
+        <div className="flex flex-col gap-4 min-w-0">
+          <Card
+            title="Packets"
+            subtitle={
+              data
+                ? `${fmtNumber(data.total)} total · ${showOffset + 1}–${showOffset + data.packets.length} on this page`
+                : "Loading capture — pick a source on the left"
+            }
+          >
+            {error ? (
+              <div className="py-10">
+                <EmptyState title="Capture unavailable" hint={error} />
+              </div>
+            ) : !data ? (
+              <div className="py-10">
+                <EmptyState
+                  title={busy ? "Reading capture…" : "Choose a capture source"}
+                  hint="Packet frames appear here as the capture is read off disk."
+                />
+              </div>
+            ) : data.packets.length === 0 ? (
+              <div className="py-10">
+                <EmptyState mode="empty" icon={Inbox} title="No packets in this capture" hint="The selected capture has no recorded packets yet." />
+              </div>
+            ) : filtered.length === 0 ? (
+              <div className="py-10">
+                <EmptyState mode="empty" icon={Search} title="No packets match the filters" hint="Clear the search text or protocol filter to see all packets on this page." />
+              </div>
+            ) : (
+              <div className="overflow-x-auto overflow-y-auto max-h-[46vh] -mx-5 -mb-5">
+                <table className="w-full text-left border-collapse">
+                  <thead className="sticky top-0 bg-[#12141F] z-10">
+                    <tr className="text-[10px] uppercase tracking-[0.12em] text-[#475569]">
+                      <th className="px-4 py-2 font-semibold">#</th>
+                      <th className="px-2 py-2 font-semibold">Time</th>
+                      <th className="px-2 py-2 font-semibold">Source</th>
+                      <th className="px-2 py-2 font-semibold">Destination</th>
+                      <th className="px-2 py-2 font-semibold">Proto</th>
+                      <th className="px-2 py-2 font-semibold">Len</th>
+                      <th className="px-2 py-2 font-semibold">Flags</th>
+                      <th className="px-2 py-2 font-semibold">Info</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </Card>
-      </div>
+                  </thead>
+                  <tbody>
+                    {filtered.map(({ pkt, idx }) => (
+                      <tr
+                        key={idx}
+                        onClick={() => setSelected(idx)}
+                        className={cn(
+                          "text-[12px] border-t border-white/[0.04] cursor-pointer hover:bg-white/[0.03] transition-colors",
+                          selected === idx &&
+                            "bg-[#7C5CFC]/[0.16] hover:bg-[#7C5CFC]/[0.2]"
+                        )}
+                      >
+                        <td className="px-4 py-1.5 text-[#475569] tabular-nums">
+                          {data.offset + idx + 1}
+                        </td>
+                        <td className="px-2 py-1.5 text-[#94A3B8] tabular-nums whitespace-nowrap">
+                          {fmtPktTime(pkt)}
+                        </td>
+                        <td className="px-2 py-1.5 font-mono text-[#CBD5E1] whitespace-nowrap">{pkt.src}</td>
+                        <td className="px-2 py-1.5 font-mono text-[#CBD5E1] whitespace-nowrap">{pkt.dst}</td>
+                        <td className="px-2 py-1.5">
+                          <ProtoPill proto={pkt.proto} />
+                        </td>
+                        <td className="px-2 py-1.5 text-[#94A3B8] tabular-nums">{pkt.len}</td>
+                        <td className="px-2 py-1.5 font-mono text-[#64748B]">{pkt.flags || "·"}</td>
+                        <td className="px-2 py-1.5 text-[#64748B] truncate max-w-[260px]">
+                          {pkt.summary}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </Card>
 
-      {/* Selected packet decode — Wireshark-style tree + hex */}
-      {packet && (
-        <Card title="Frame details" subtitle="Protocol decode + raw bytes" className="mt-4">
-          <PacketDecode packet={packet} />
-        </Card>
-      )}
+          <Card
+            title="Frame details"
+            subtitle={
+              packet
+                ? `Packet #${data ? data.offset + selected + 1 : ""} · ${packet.src}:${packet.sport ?? "—"} → ${packet.dst}:${packet.dport ?? "—"}`
+                : "Select a packet row above to inspect its protocol decode and raw bytes"
+            }
+          >
+            {packet ? (
+              <PacketDecode packet={packet} />
+            ) : (
+              <div className="py-6 flex flex-col items-center gap-2 text-center">
+                <FileSearch size={20} className="text-[#334155]" />
+                <p className="text-[12px] text-[#64748B] max-w-[360px]">
+                  Click any packet in the list above — the decode tree and hex
+                  dump update instantly, Wireshark-style.
+                </p>
+              </div>
+            )}
+          </Card>
+        </div>
+      </div>
     </div>
   );
 }
@@ -302,11 +451,15 @@ function fmtBytes(n: number): string {
   return `${(n / (1024 * 1024)).toFixed(1)} MB`;
 }
 
+function fmtNumber(n: number): string {
+  return n >= 1000 ? `${(n / 1000).toFixed(1)}k` : String(n);
+}
+
 function PacketDecode({ packet }: { packet: CapturePacket }) {
   const decode = packet.decode;
 
   return (
-    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4">
+    <div className="grid grid-cols-1 xl:grid-cols-2 gap-4 items-start">
       {/* Decoded tree */}
       <div className="text-[12px] leading-relaxed">
         <TreeLabel label={`Frame ${packet.len} bytes (Ethernet + IP)`} depth={0} open>
@@ -366,18 +519,7 @@ function PacketDecode({ packet }: { packet: CapturePacket }) {
       </div>
 
       {/* Hex dump */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-[11px] uppercase tracking-[0.12em] text-[#475569]">
-            Raw bytes {packet.hex ? `(${packet.hex.length / 2} B)` : ""}
-          </p>
-        </div>
-        {packet.hex ? (
-          <HexDump hex={packet.hex} />
-        ) : (
-          <p className="text-[12px] text-[#64748B]">No hex payload available.</p>
-        )}
-      </div>
+      <HexDump hex={packet.hex ?? ""} len={packet.len} />
     </div>
   );
 }
@@ -403,9 +545,9 @@ function TreeLabel({
       >
         <ChevronRight
           size={12}
-          className={cn("text-[#475569] transition-transform", isOpen && "rotate-90")}
+          className={cn("text-[#475569] transition-transform shrink-0", isOpen && "rotate-90")}
         />
-        <span className={cn(depth === 0 ? "text-white font-semibold" : "text-[#CBD5E1]")}>
+        <span className={cn(depth === 0 ? "text-white font-semibold" : "text-[#CBD5E1]", "break-all")}>
           {label}
         </span>
       </div>
@@ -417,8 +559,8 @@ function TreeLabel({
 function TreeKV({ k, v, depth }: { k: string; v: string; depth: number }) {
   return (
     <div className="flex items-baseline gap-2" style={{ paddingLeft: depth * 14 + 18 }}>
-      <span className="text-[#64748B]">{k}:</span>
-      <span className="text-[#38BDF8] font-mono text-[11.5px]">{v}</span>
+      <span className="text-[#64748B] shrink-0">{k}:</span>
+      <span className="text-[#38BDF8] font-mono text-[11.5px] break-all">{v}</span>
     </div>
   );
 }
@@ -427,7 +569,7 @@ function protoName(n: number): string {
   return ["", "icmp", "", "", "", "", "tcp", "", "", "", "", "", "", "", "", "", ""][n] ?? String(n);
 }
 
-function HexDump({ hex }: { hex: string }) {
+function HexDump({ hex, len }: { hex: string; len: number }) {
   const rows = useMemo(() => {
     const bytes = hex.match(/.{1,2}/g) ?? [];
     const out: { addr: string; hexStr: string; ascii: string }[] = [];
@@ -450,24 +592,36 @@ function HexDump({ hex }: { hex: string }) {
 
   return (
     <div className="overflow-x-auto rounded-lg border border-white/[0.06] bg-[#0B0B17]">
-      <table className="w-full text-left">
-        <thead>
-          <tr className="text-[10px] text-[#475569] uppercase tracking-wider">
-            <th className="px-2 py-1.5 font-semibold">Offset</th>
-            <th className="px-2 py-1.5 font-semibold">Bytes</th>
-            <th className="px-2 py-1.5 font-semibold">ASCII</th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.addr} className="font-mono text-[11.5px] border-t border-white/[0.04]">
-              <td className="px-2 py-1 text-[#475569]">{r.addr}</td>
-              <td className="px-2 py-1 text-[#CBD5E1] whitespace-nowrap">{r.hexStr}</td>
-              <td className="px-2 py-1 text-[#64748B] whitespace-nowrap">{r.ascii}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
+      <div className="flex items-center justify-between px-2.5 py-2 border-b border-white/[0.05]">
+        <p className="text-[11px] uppercase tracking-[0.12em] text-[#475569]">
+          Raw bytes {hex ? `(${hex.length / 2} B)` : ""}
+        </p>
+        <span className="text-[10.5px] text-[#64748B] tabular-nums">frame {len} bytes</span>
+      </div>
+      {rows.length === 0 ? (
+        <p className="text-[12px] text-[#64748B] px-3 py-4">No hex payload available.</p>
+      ) : (
+        <div className="max-h-[380px] overflow-auto">
+          <table className="w-full text-left">
+            <thead className="sticky top-0 bg-[#0B0B17]">
+              <tr className="text-[10px] text-[#475569] uppercase tracking-wider">
+                <th className="px-2 py-1.5 font-semibold">Offset</th>
+                <th className="px-2 py-1.5 font-semibold">Bytes</th>
+                <th className="px-2 py-1.5 font-semibold">ASCII</th>
+              </tr>
+            </thead>
+            <tbody>
+              {rows.map((r) => (
+                <tr key={r.addr} className="font-mono text-[11.5px] border-t border-white/[0.04]">
+                  <td className="px-2 py-1 text-[#475569]">{r.addr}</td>
+                  <td className="px-2 py-1 text-[#CBD5E1] whitespace-nowrap">{r.hexStr}</td>
+                  <td className="px-2 py-1 text-[#64748B] whitespace-nowrap">{r.ascii}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
     </div>
   );
 }

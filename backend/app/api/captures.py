@@ -62,6 +62,7 @@ async def download_capture(file: str = Query(...)) -> FileResponse:
 async def packets(
     file: str = Query("active/current.pcap"),
     limit: int = Query(200, ge=1, le=2000),
+    offset: int = Query(0, ge=0),
 ) -> dict:
     if file == "active/current.pcap":
         path = flow_pcap_recorder.current_path()
@@ -82,7 +83,7 @@ async def packets(
         return {"error": str(exc), "total": 0, "packets": []}
 
     view = []
-    for pkt in packets[:limit]:
+    for pkt in packets[offset : offset + limit]:
         entry = {
             "time": float(getattr(pkt, "time", 0.0)),
             "src": "-",
@@ -110,7 +111,13 @@ async def packets(
         entry["raw_len"] = len(raw)
         entry["decode"] = _decode_packet(pkt)
         view.append(entry)
-    return {"total": len(packets), "packets": view}
+    return {
+        "total": len(packets),
+        "offset": offset,
+        "limit": limit,
+        "count": len(view),
+        "packets": view,
+    }
 
 
 def _decode_packet(pkt) -> dict:

@@ -116,6 +116,9 @@ export interface CapturePacket {
 
 export interface CapturePacketsResponse {
   total: number;
+  offset: number;
+  limit: number;
+  count: number;
   packets: CapturePacket[];
   error?: string;
 }
@@ -242,9 +245,9 @@ export const api = {
   /* traffic captures */
   captures: () => request<CapturesResponse>(`/api/v1/captures/incidents`),
   activeCapture: () => request<ActiveCapture>(`/api/v1/captures/active`),
-  capturePackets: (file: string, limit = 200) =>
+  capturePackets: (file: string, limit = 200, offset = 0) =>
     request<CapturePacketsResponse>(
-      `/api/v1/captures/packets?file=${encodeURIComponent(file)}&limit=${limit}`
+      `/api/v1/captures/packets?file=${encodeURIComponent(file)}&limit=${limit}&offset=${offset}`
     ),
   captureDownloadUrl: (file: string) =>
     `${BASE}/api/v1/captures/download?file=${encodeURIComponent(file)}`,

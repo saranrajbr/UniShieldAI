@@ -26,11 +26,11 @@ import { Card } from "../components/ui/Card";
 import { StatCard } from "../components/ui/StatCard";
 import { AlertRow, StatusChip } from "../components/alerts/AlertRow";
 import { EmptyState } from "../components/alerts/EmptyState";
-import { severityMeta } from "../lib/threats";
-import { threatMeta } from "../lib/threats";
+import { severityMeta, threatMeta, THREATS } from "../lib/threats";
 import {
   formatNumber,
   humanThreatType,
+  type Alert,
   type EngineMetrics,
   type RuntimeMetrics,
 } from "../lib/api";
@@ -383,20 +383,7 @@ export default function Overview() {
               />
             </div>
           </Card>
-          <Card title="What am I looking at?" subtitle="PS 26145 · read-only analyzer">
-            <ul className="text-[12px] text-[#94A3B8] leading-relaxed space-y-2">
-              {[
-                "Classifies every flow using rules + ML (DDoS amplification, DNS tunneling, C2, scans…).",
-                "Detections are advisory — this console only raises alarms, it never blocks or isolates.",
-                "Best signals to watch: Ingest rate, Alerts raised, and severity spikes in the posture panel.",
-              ].map((t) => (
-                <li key={t} className="flex gap-2">
-                  <span className="text-[#6BCB77] mt-0.5">✓</span>
-                  {t}
-                </li>
-              ))}
-            </ul>
-          </Card>
+          <ThreatMatrix alerts={alerts} />
         </div>
       </div>
     </div>
@@ -414,6 +401,90 @@ function fmtDur(ms: number): string {
   if (s < 60) return `${s}s`;
   const m = Math.floor(s / 60);
   return `${m}m ${s % 60}s`;
+}
+
+function ThreatMatrix({ alerts }: { alerts: Alert[] }) {
+  const byType = useMemo(() => {
+    const m = new Map<string, { count: number; severity: string }>();
+    for (const a of alerts) {
+      const cur = m.get(a.threat_type) ?? { count: 0, severity: "low" };
+      const rank: Record<string, number> = { critical: 4, high: 3, medium: 2, low: 1, info: 0 };
+      if (rank[a.severity] > rank[cur.severity]) cur.severity = a.severity;
+      cur.count += 1;
+      m.set(a.threat_type, { ...cur });
+    }
+    return m;
+  }, [alerts]);
+
+  const maxCount = useMemo(() => {
+    let max = 0;
+    byType.forEach((v) => (max = Math.max(max, v.count)));
+    return max;
+  }, [byType]);
+
+  const rows = THREATS.filter((t) => t.type !== "benign" && t.type !== "unknown");
+
+  return (
+    <Card
+      title="Threat matrix"
+      subtitle="Every modeled threat class — observed counts in the alerts window, live or inactive"
+    >
+      <div className="flex flex-col gap-1.5">
+        {rows.length === 0 && (
+          <p className="text-[12px] text-[#64748B]">No threat classes loaded.</p>
+        )}
+        {rows.map((t) => {
+          const obs = byType.get(t.type);
+          const count = obs?.count ?? 0;
+          const sev = obs?.severity
+            ? severityMeta(obs.severity)
+            : { label: "—", color: "#334155", bg: "transparent" };
+          const pct = maxCount > 0 ? (count / maxCount) * 100 : 0;
+          return (
+            <div
+              key={t.type}
+              className="flex items-center gap-2.5"
+              title={t.blurb}
+            >
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{
+                  background: count > 0 ? sev.color : "#334155",
+                  boxShadow: count > 0 ? `0 0 6px ${sev.color}` : "none",
+                }}
+              />
+              <span className="w-[130px] truncate text-[11.5px] text-[#CBD5E1] shrink-0">
+                {t.label}
+              </span>
+              <span className="w-3 text-right text-[10px] text-[#334155] shrink-0">
+                {count > 0 ? "" : "·"}
+              </span>
+              <div className="flex-1 h-1.5 rounded-full bg-white/[0.05] overflow-hidden min-w-[30px]">
+                {count > 0 && (
+                  <div
+                    className="h-full rounded-full transition-all duration-300"
+                    style={{ width: `${Math.max(6, pct)}%`, background: sev.color }}
+                  />
+                )}
+              </div>
+              <span
+                className="w-14 text-right text-[11px] font-semibold tabular-nums shrink-0"
+                style={{ color: count > 0 ? sev.color : "#475569" }}
+              >
+                {count > 0 ? count : "inactive"}
+              </span>
+              <span
+                className="w-[54px] text-right text-[9px] uppercase tracking-wider shrink-0"
+                style={{ color: count > 0 ? sev.color : "#334155" }}
+              >
+                {count > 0 ? sev.label : "—"}
+              </span>
+            </div>
+          );
+        })}
+      </div>
+    </Card>
+  );
 }
 
 function AttackRow({ s }: { s: SourceActivity }) {

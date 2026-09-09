@@ -7,12 +7,12 @@ THREAT_PRIORITY: dict[ThreatType, int] = {
     ThreatType.PORT_SCAN: 2,
     ThreatType.BRUTE_FORCE: 3,
     ThreatType.LATERAL_MOVEMENT: 3,
-    ThreatType.DNS_TUNNELING: 3,
     ThreatType.C2_COMMUNICATION: 4,
     ThreatType.DATA_EXFILTRATION: 4,
     ThreatType.MALWARE_COMMUNICATION: 4,
     ThreatType.DOS: 4,
     ThreatType.DDoS: 4,
+    ThreatType.DNS_TUNNELING: 5,  # more specific technique than generic exfil
 }
 
 
@@ -33,7 +33,17 @@ class ThreatClassifier:
             if tt != ThreatType.SUSPICIOUS_TRAFFIC
         ]
         if specific:
-            return max(specific, key=lambda item: (item[0], self.priority(item[1])))[1]
+            winner_score, winner = max(
+                specific, key=lambda item: (item[0], self.priority(item[1]))
+            )
+            # DNS tunneling is a technique-level subset of data exfiltration.
+            # When a high-entropy DNS channel is detected, that label is strictly
+            # more actionable than the generic byte-ratio exfil that co-fires.
+            if winner in (ThreatType.DATA_EXFILTRATION, ThreatType.MALWARE_COMMUNICATION):
+                for score, tt in specific:
+                    if tt == ThreatType.DNS_TUNNELING:
+                        return tt
+            return winner
 
         candidates: list[tuple[float, ThreatType]] = list(rule_candidates)
 

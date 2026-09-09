@@ -35,7 +35,8 @@ async def send_batch(client: httpx.AsyncClient, url: str, batch: list[Any]) -> N
 
 
 async def run(args: argparse.Namespace) -> None:
-    source = TestTrafficSource(flows_per_second=args.fps, seed=args.seed)
+    source = TestTrafficSource(flows_per_second=args.fps, seed=args.seed,
+                               scenario=args.scenario)
     await source.start()
 
     base = args.url.rstrip("/")
@@ -63,6 +64,8 @@ def main() -> None:
     parser.add_argument("--batch-size", type=int, default=100)
     parser.add_argument("--duration", type=float, default=0.0, help="seconds (0 = infinite)")
     parser.add_argument("--seed", type=int, default=None)
+    parser.add_argument("--scenario", type=str, default=None,
+                        help="force a single scenario (port_scan|syn_flood|udp_flood|slowloris|dns_tunnel|c2_beacon|brute_force|benign)")
     args = parser.parse_args()
     asyncio.run(run(args))
 

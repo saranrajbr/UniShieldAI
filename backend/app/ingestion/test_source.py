@@ -16,13 +16,13 @@ INTERNAL_PREFIX = "10.0.{segment}.{host}"
 EXTERNAL_PREFIX = "{a}.{b}.{c}.{d}"
 
 THREAT_SCENARIOS = {
-    "port_scan": {"pct": 0.2, "label": "port_scan"},
-    "syn_flood": {"pct": 0.15, "label": "syn_flood"},
-    "udp_flood": {"pct": 0.12, "label": "udp_flood"},
-    "slowloris": {"pct": 0.08, "label": "slowloris"},
-    "dns_tunnel": {"pct": 0.08, "label": "dns_tunnel"},
-    "c2_beacon": {"pct": 0.07, "label": "c2_beacon"},
-    "brute_force": {"pct": 0.1, "label": "brute_force"},
+    "port_scan": {"pct": 0.26, "label": "port_scan"},
+    "syn_flood": {"pct": 0.07, "label": "syn_flood"},
+    "udp_flood": {"pct": 0.05, "label": "udp_flood"},
+    "slowloris": {"pct": 0.1, "label": "slowloris"},
+    "dns_tunnel": {"pct": 0.12, "label": "dns_tunnel"},
+    "c2_beacon": {"pct": 0.04, "label": "c2_beacon"},
+    "brute_force": {"pct": 0.16, "label": "brute_force"},
     "benign": {"pct": 0.2, "label": "benign"},
 }
 
@@ -34,11 +34,13 @@ class TestTrafficSource(FlowSourceBase):
 
     name = "test_source"
 
-    def __init__(self, flows_per_second: float = 50.0, seed: int | None = None) -> None:
+    def __init__(self, flows_per_second: float = 50.0, seed: int | None = None,
+                 scenario: str | None = None) -> None:
         self.flows_per_second = flows_per_second
         self._rng = random.Random(seed)
         self._running = False
         self._seq = 0
+        self._scenario_override = scenario if scenario in THREAT_SCENARIOS else None
         # Stable persona IPs so per-source state (unique_dst_ports,
         # connection_frequency, small_packet_ratio) actually accumulates the
         # way a real attacker's tool does, instead of a fresh IP per record.
@@ -79,6 +81,8 @@ class TestTrafficSource(FlowSourceBase):
         return records
 
     def _pick_scenario(self) -> str:
+        if self._scenario_override is not None:
+            return self._scenario_override
         total = sum(cfg["pct"] for cfg in THREAT_SCENARIOS.values())
         pick = self._rng.random() * total
         acc = 0.0

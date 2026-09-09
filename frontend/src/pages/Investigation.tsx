@@ -385,7 +385,8 @@ function CaptureCard({ alert }: { alert: Alert }) {
         const res = await api.capturePackets(file, 300);
         if (!cancelled) setPackets(res);
       } catch {
-        if (!cancelled) setPackets({ total: 0, packets: [] });
+        if (!cancelled)
+          setPackets({ total: 0, offset: 0, limit: 300, count: 0, packets: [] });
       } finally {
         if (!cancelled) setLoading(false);
       }

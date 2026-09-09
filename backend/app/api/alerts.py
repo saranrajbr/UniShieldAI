@@ -15,16 +15,16 @@ router = APIRouter(prefix="/api/v1/alerts", tags=["alerts"])
 @router.get("", response_model=AlertList)
 async def list_alerts(
     limit: int = Query(50, ge=1, le=500),
-    session: AsyncSession = Depends(get_session),
 ) -> AlertList:
-    repo = AlertRepository(session)
-    persisted = await repo.get_recent(limit)
+    """Live detection window (this engine session), not full DB history.
 
-    live = _live_alerts(limit)
-    for ctx in live:
-        persisted.append(_ctx_to_schema(ctx))
-
-    return AlertList(total=len(persisted), alerts=persisted[:limit])
+    Persisted alerts remain available per-id for investigation and as an
+    audit log; the list endpoint only exposes what the engine has emitted
+    this session so flood-heavy history can't drown out newer, rarer threat
+    classes in the SOC views.
+    """
+    alerts = [_ctx_to_schema(ctx) for ctx in pipeline.alert_manager.recent(limit)]
+    return AlertList(total=len(alerts), alerts=alerts)
 
 
 @router.get("/live", response_model=AlertList)
@@ -55,10 +55,6 @@ async def resolve_alert(
     if alert is None:
         raise HTTPException(status_code=404, detail="Alert not found")
     return {"ok": True, "status": alert.status, "alert_id": alert.alert_id}
-
-
-def _live_alerts(limit: int):
-    return pipeline.alert_manager.recent(limit)
 
 
 def _ctx_to_schema(ctx) -> AlertOut:
